@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 오늘의 이동</title>
+  <!-- CSS는 프론트엔드2가 작성 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== 상단: 로고 ===== -->
+  <header class="header">
+    <a href="home.html" class="logo">
+      <img src="images/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+
+  <!-- ===== 본문 ===== -->
+  <main class="home">
+
+    <!-- 1. 제목 구역 -->
+    <section class="home-intro">
+      <p class="sub-title">나의 속도로, 나에게 편한 길</p>
+      <h1>어디로 갈까요?</h1>
+      <p class="profile-status">
+        <img src="images/icon-check.svg" alt="">
+        <span>나의 이동 프로필 적용 중</span>
+      </p>
+    </section>
+
+    <!-- 2. 길찾기 입력 + 버튼 (길찾기 동작은 프론트엔드2가 JS로) -->
+    <form class="route-form">
+
+      <!-- 출발지 -->
+      <div class="input-box">
+        <label for="start">출발지</label>
+        <div class="input-row">
+          <span class="input-dot"></span> <!-- 동그라미 (모양은 CSS로) -->
+          <input type="text" id="start" name="start" placeholder="출발지를 입력해주세요">
+        </div>
+      </div>
+
+      <!-- 목적지 -->
+      <div class="input-box">
+        <label for="end">목적지</label>
+        <div class="input-row">
+          <span class="input-dot"></span> <!-- 동그라미 (모양은 CSS로) -->
+          <input type="text" id="end" name="end" placeholder="목적지를 입력해주세요">
+        </div>
+      </div>
+
+      <!-- 오늘의 특별한 상황 (분홍 박스) -->
+      <section class="today">
+        <h2>오늘 이동에 특별한 상황이 있나요?</h2>
+        <p class="today-desc">필요한 날에만 한마디 더해주세요.</p>
+
+        <div class="input-box">
+          <label for="today-status">오늘의 이동 상태 · 선택</label>
+          <textarea id="today-status" name="today-status"
+            placeholder="예: 캐리어가 있어요 / 다리를 다쳤어요 / 유모차를 끌고 있어요"></textarea>
+        </div>
+
+        <!-- 음성 입력 버튼 (동작은 프론트엔드2가 JS로) -->
+        <button type="button" class="btn-ai">
+          <img src="images/icon-mic.svg" alt="">
+          <span>AI에게 말하기</span>
+        </button>
+
+        <p class="note">오늘 입력한 내용은 이번 경로에만 반영해요.</p>
+      </section>
+
+      <p class="note">입력하지 않으면 저장된 이동 프로필이 자동 적용됩니다.</p>
+      <button type="submit" class="btn-primary">나에게 편한 길 찾기</button>
+
+    </form>
+
+  </main>
+
+</body>
+</html>
