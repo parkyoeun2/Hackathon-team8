@@ -22,7 +22,8 @@
 
     <!-- 1. 제목 구역 -->
     <section class="home-intro">
-      <p class="sub-title">나의 속도로, 나에게 편한 길</p>
+      <!-- 프로필 수정 링크 (앞의 < 화살표는 CSS로) -->
+      <a href="profile.html" class="profile-edit-link">이동 프로필 수정하기</a>
       <h1>어디로 갈까요?</h1>
       <p class="profile-status">
         <img src="images/icon-check.svg" alt="">
@@ -30,25 +31,19 @@
       </p>
     </section>
 
-    <!-- 2. 길찾기 입력 + 버튼 (길찾기 동작은 프론트엔드2가 JS로) -->
+    <!-- 2. 길찾기 입력 + 버튼 (ROUTE-01, 동작은 프론트엔드2가 JS로) -->
     <form class="route-form">
 
       <!-- 출발지 -->
       <div class="input-box">
         <label for="start">출발지</label>
-        <div class="input-row">
-          <span class="input-dot"></span> <!-- 동그라미 (모양은 CSS로) -->
-          <input type="text" id="start" name="start" placeholder="출발지를 입력해주세요">
-        </div>
+        <input type="text" id="start" name="start" placeholder="출발지를 입력해주세요">
       </div>
 
       <!-- 목적지 -->
       <div class="input-box">
         <label for="end">목적지</label>
-        <div class="input-row">
-          <span class="input-dot"></span> <!-- 동그라미 (모양은 CSS로) -->
-          <input type="text" id="end" name="end" placeholder="목적지를 입력해주세요">
-        </div>
+        <input type="text" id="end" name="end" placeholder="목적지를 입력해주세요">
       </div>
 
       <!-- 오늘의 특별한 상황 (분홍 박스) -->
@@ -57,21 +52,25 @@
         <p class="today-desc">필요한 날에만 한마디 더해주세요.</p>
 
         <div class="input-box">
-          <label for="today-status">오늘의 이동 상태 · 선택</label>
+          <label for="today-status">오늘의 이동 상태 (선택)</label>
           <textarea id="today-status" name="text" maxlength="500"
             placeholder="예: 캐리어가 있어요 / 다리를 다쳤어요 / 유모차를 끌고 있어요"></textarea>
         </div>
 
-        <!-- 음성 입력 버튼 (동작은 프론트엔드2가 JS로) -->
-        <button type="button" class="btn-ai">
-          <img src="images/icon-mic.svg" alt="">
-          <span>AI에게 말하기</span>
-        </button>
+        <!-- 입력 완료: 문장 분석 요청 (PARSE-01, 동작은 프론트엔드2가 JS로) -->
+        <button type="button" class="btn-ai">입력 완료</button>
+
+        <!-- 문장 분석 에러 문구 자리 (평소엔 숨김, JS가 보여줌) -->
+        <p class="error-message" role="alert" hidden></p>
 
         <p class="note">오늘 입력한 내용은 이번 경로에만 반영해요.</p>
       </section>
 
       <p class="note">입력하지 않으면 저장된 이동 프로필이 자동 적용됩니다.</p>
+
+      <!-- 길찾기 에러 문구 자리 (평소엔 숨김, JS가 보여줌) -->
+      <p class="error-message" role="alert" hidden></p>
+
       <button type="submit" class="btn-primary">나에게 편한 길 찾기</button>
 
     </form>

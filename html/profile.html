@@ -22,7 +22,6 @@
 
     <!-- 1. 제목 구역 -->
     <section class="profile-intro">
-      <span class="badge">처음 한 번만</span>
       <h1>나의 이동 프로필 설정</h1>
       <p>한 번 설정하면, 다음부터는 나에게 맞는 길을 자동으로 추천해드려요.</p>
     </section>
@@ -56,44 +55,32 @@
           </label>
         </li>
 
-        <!-- 옵션 3: 보행 단절 -->
+        <!-- 옵션 3: 불편한 길 -->
         <li class="option">
           <label>
             <img class="option-icon" src="images/icon-gap.svg" alt="">
             <span class="option-text">
-              <strong>보행 단절</strong>
-              <span>보도가 끊긴 길 피하기</span>
+              <strong>불편한 길</strong>
+              <span>보도가 끊기거나 횡단 연결이 불편한 길 피하기</span>
             </span>
-            <input type="checkbox" name="avoid-gap" role="switch" checked>
+            <input type="checkbox" name="crosswalks" value="avoid" role="switch" checked>
           </label>
         </li>
 
-        <!-- 옵션 4: 조금 돌아가도 괜찮음 -->
+        <!-- 옵션 4: 편한 길 우선 -->
         <li class="option">
           <label>
             <img class="option-icon" src="images/icon-detour.svg" alt="">
             <span class="option-text">
-              <strong>조금 돌아가도 괜찮음</strong>
-              <span>시간이 더 걸려도 괜찮아요</span>
-            </span>
-            <input type="checkbox" name="detourAllowed" role="switch" checked>
-          </label>
-        </li>
-
-        <!-- 옵션 5: 이동시간보다 편안함 우선 -->
-        <li class="option">
-          <label>
-            <img class="option-icon" src="images/icon-heart.svg" alt="">
-            <span class="option-text">
-              <strong>이동시간보다 편안함 우선</strong>
-              <span>빠른 길보다 편안한 길</span>
+              <strong>편한 길 우선</strong>
+              <span>시간이 조금 더 걸려도 괜찮아요</span>
             </span>
             <input type="checkbox" name="comfortFirst" role="switch" checked>
           </label>
         </li>
       </ul>
 
-      <p class="note">설정은 나중에 언제든 바꿀 수 있어요.</p>
+      <p class="note">설정은 나중에 언제든 수정할 수 있어요.</p>
       <button type="submit" class="btn-primary">내 프로필 저장하고 시작하기</button>
 
     </form>
