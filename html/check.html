@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 경로 정보 확인</title>
+  <!-- CSS는 프론트엔드2가 작성 -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== 상단: 로고 ===== -->
+  <header class="header">
+    <a href="home.html" class="logo">
+      <img src="images/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+
+  <!-- ===== 본문: 정보 미확인 구간이 있는 경로 (routes[].warnings가 있을 때, 내용은 JS가 채움) ===== -->
+  <main class="check">
+
+    <!-- 1. 제목 구역 -->
+    <section class="check-intro">
+      <h1><img src="images/icon-warning.svg" alt=""> 경로 정보를 확인해주세요</h1>
+      <!-- 출발/도착: 홈에서 입력한 글자 (예시) -->
+      <p class="route-summary">
+        <strong class="route-start">우리 집</strong>
+        <span aria-hidden="true">→</span>
+        <strong class="route-end">동네 우체국</strong>
+      </p>
+    </section>
+
+    <!-- 2. 경로 카드 (04 result.html과 같은 구조, 예시 값) -->
+    <article class="route-card is-recommended">
+      <h2 class="route-label">나에게 편한 길 <span class="badge">· 추천</span></h2>
+      <!-- 시간은 명세서에 없음 (백엔드 확인 중), 거리 = distanceM -->
+      <p class="route-main">
+        <span class="route-time">18분</span>
+        <span aria-hidden="true">·</span>
+        <span class="route-distance">1.1km</span>
+      </p>
+      <ul class="route-stats">
+        <!-- maxSlopePercent가 없을 때 "정보 미확인" (백엔드 확인 중) -->
+        <li>최대 경사 <span class="stat-slope is-unknown">정보 미확인</span></li>
+        <li>계단 <span class="stat-stairs">0개</span></li>
+        <li>횡단보도 <span class="stat-crosswalks">3개</span></li>
+      </ul>
+      <!-- reason -->
+      <p class="route-reason">계단이 없는 경로예요. 일부 구간의 경사 정보는 확인하지 못했어요.</p>
+      <a href="route.html" class="route-link">이 경로 보기 <span aria-hidden="true">→</span></a>
+    </article>
+
+    <!-- 3. 주의 상자 (routes[].warnings, 분홍 박스) -->
+    <section class="warning-box" role="note" aria-labelledby="warning-title">
+      <h2 id="warning-title" class="warning-title">
+        <img src="images/icon-info.svg" alt="">
+        <span>경사 정보 일부 미확인</span>
+      </h2>
+      <p class="warning-text">일부 구간은 고도 데이터가 충분하지 않아 경사 정보를 제공하지 못할 수 있습니다.</p>
+      <p class="warning-sub">정보 미확인은 경사가 없다는 뜻이 아니에요. 확인된 정보와 함께 경로를 살펴보세요.</p>
+    </section>
+
+    <!-- 4. 돌아가기 (04 경로 비교 화면으로) -->
+    <a href="result.html" class="btn-primary">경로 비교로 돌아가기</a>
+
+  </main>
+
+</body>
+</html>
