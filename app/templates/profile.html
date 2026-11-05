@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 이동 프로필 설정</title>
+  <!-- CSS는 프론트엔드2가 작성 -->
+  <link rel="stylesheet" href="../static/css/style.css">
+</head>
+<body>
+
+  <!-- ===== 상단: 로고 ===== -->
+  <header class="header">
+    <a href="home.html" class="logo">
+      <img src="../static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+
+  <!-- ===== 본문 ===== -->
+  <main class="profile">
+
+    <!-- 1. 제목 구역 -->
+    <section class="profile-intro">
+      <h1>나의 이동 프로필 설정</h1>
+      <p>한 번 설정하면, 다음부터는 나에게 맞는 길을 자동으로 추천해드려요.</p>
+    </section>
+
+    <!-- 2. 설정 목록 + 저장 버튼 -->
+    <form class="profile-form" action="home.html">
+
+      <ul class="option-list">
+        <!-- 옵션 1: 계단 -->
+        <li class="option">
+          <label>
+            <img class="option-icon" src="../static/img/icon-stairs.svg" alt="">
+            <span class="option-text">
+              <strong>계단</strong>
+              <span>최대한 피하기</span>
+            </span>
+            <!-- 토글 스위치 (모양은 CSS로) -->
+            <input type="checkbox" name="stairs" value="avoid" role="switch" checked>
+          </label>
+        </li>
+
+        <!-- 옵션 2: 급경사 -->
+        <li class="option">
+          <label>
+            <img class="option-icon" src="../static/img/icon-slope.svg" alt="">
+            <span class="option-text">
+              <strong>급경사</strong>
+              <span>피하기</span>
+            </span>
+            <input type="checkbox" name="gentleSlope" role="switch" checked>
+          </label>
+        </li>
+
+        <!-- 옵션 3: 불편한 길 -->
+        <li class="option">
+          <label>
+            <img class="option-icon" src="../static/img/icon-gap.svg" alt="">
+            <span class="option-text">
+              <strong>불편한 길</strong>
+              <span>보도가 끊기거나 횡단 연결이 불편한 길 피하기</span>
+            </span>
+            <input type="checkbox" name="crosswalks" value="avoid" role="switch" checked>
+          </label>
+        </li>
+
+        <!-- 옵션 4: 편한 길 우선 -->
+        <li class="option">
+          <label>
+            <img class="option-icon" src="../static/img/icon-detour.svg" alt="">
+            <span class="option-text">
+              <strong>편한 길 우선</strong>
+              <span>시간이 조금 더 걸려도 괜찮아요</span>
+            </span>
+            <input type="checkbox" name="comfortFirst" role="switch" checked>
+          </label>
+        </li>
+      </ul>
+
+      <p class="note">설정은 나중에 언제든 수정할 수 있어요.</p>
+      <button type="submit" class="btn-primary">내 프로필 저장하고 시작하기</button>
+
+    </form>
+
+  </main>
+
+</body>
+</html>
