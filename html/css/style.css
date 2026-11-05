@@ -177,7 +177,7 @@ a { color: inherit; text-decoration: none; }
   background: var(--green-light);
 }
 .slope-illust-title { font-size: 13px; font-weight: 700; color: var(--green); }
-.slope-illust img { display: block; width: 100%; height: auto; margin-top: 8px; }
+.slope-illust-graphic { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; } .slope-illust-walker { width: 24px; height: auto; flex-shrink: 0; } .slope-illust-line { flex: 1; min-width: 0; height: auto; }
 .slope-illust-note { margin-top: 8px; font-size: 11px; color: var(--text-sub); }
 
 /* 이 경로 선택하기 버튼 위 여백 */
