@@ -698,6 +698,17 @@ aside.parse-sheet,
   text-align: center;
 }
 
+dialog.parse-sheet {
+  position: static !important;
+  inset: auto !important;
+}
+
+dialog.parse-sheet,
+.parse-sheet {
+  border: none !important;
+  outline: none !important;
+}
+
 /* ==========================================================================
    7. 페이지 3: 경로 비교 결과 (result.html)
    ========================================================================== */
