@@ -1,0 +1,120 @@
+/* ===== 1. 공통 색 · 글꼴 (여기 색만 바꾸면 전체가 바뀜) ===== */
+:root {
+  --green: #466956;        /* 진한 초록 */
+  --green-light: #EAF2EC;  /* 연한 초록 */
+  --text: #1F2A24;         /* 기본 글자 */
+  --text-sub: #6B7570;     /* 회색 보조 글자 */
+  --line: #E3E8E4;         /* 카드 테두리 */
+  --radius: 16px;          /* 둥근 모서리 */
+}
+
+/* 기본 설정: 여백, 점(•), 밑줄 없애기 */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: var(--text);
+  background: #fff;
+}
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; text-decoration: none; }
+[hidden] { display: none !important; } /* hidden은 무조건 숨기기 */
+
+/* 화면 가운데에 휴대폰 폭으로 */
+.header, main {
+  max-width: 420px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* ===== 2. 상단 로고 ===== */
+.header { padding-top: 20px; padding-bottom: 12px; }
+.logo {
+  display: inline-flex;   /* 나뭇잎과 글자를 가로로 */
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.logo img { width: 20px; height: 20px; }
+
+/* ===== 3. 04 경로 비교 결과 ===== */
+.result { padding-bottom: 40px; }
+
+/* 제목 구역 */
+.result-intro h1 { margin-top: 16px; font-size: 22px; font-weight: 700; }
+.route-summary {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.applied-conditions { margin-top: 12px; font-size: 12px; color: var(--text-sub); }
+
+/* 카드 목록: 카드끼리 12px 띄우기 */
+.route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* 카드 기본 (가장 빠른 길) */
+.route-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+/* 추천 카드 (나에게 편한 길): 연초록 배경 + 초록 테두리 */
+.route-card.is-recommended {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+/* 경로 이름 */
+.route-label { font-size: 15px; font-weight: 700; color: var(--green); }
+
+/* 18분 · 1.1km */
+.route-main {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* 아이콘 + 문장 3줄 */
+.route-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.route-stats li {
+  display: flex;          /* 아이콘과 글자를 가로로 */
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.stat-icon { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* 추천 이유 */
+.route-reason-title { margin-top: 14px; font-size: 13px; font-weight: 700; }
+.route-reason {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+/* 이 경로 보기 → */
+.route-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
