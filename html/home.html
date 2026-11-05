@@ -37,13 +37,13 @@
       <!-- 출발지 -->
       <div class="input-box">
         <label for="start">출발지</label>
-        <input type="text" id="start" name="start" placeholder="출발지를 입력해주세요">
+        <input type="text" id="start" name="start" required placeholder="출발지를 입력해주세요">
       </div>
 
       <!-- 목적지 -->
       <div class="input-box">
         <label for="end">목적지</label>
-        <input type="text" id="end" name="end" placeholder="목적지를 입력해주세요">
+        <input type="text" id="end" name="end" required placeholder="목적지를 입력해주세요">
       </div>
 
       <!-- 오늘의 특별한 상황 (분홍 박스) -->
@@ -80,6 +80,11 @@
     <!-- ===== 03. 오늘의 이동 상태 해석 확인 (아래에서 올라오는 창) =====
        '입력 완료' → PARSE-01 응답이 오면 JS가 내용을 채우고 열어요 (프론트엔드2) -->
   <dialog class="parse-sheet" aria-labelledby="parse-title">
+        <!-- 다시 입력하기: 창을 닫고 홈 입력칸으로 (앞의 < 화살표는 CSS로) -->
+    <form method="dialog">
+      <button type="submit" class="back-link" value="retry">다시 입력하기</button>
+    </form>
+
     <h2 id="parse-title">오늘의 이동 상태를<br>이렇게 반영할게요</h2>
 
     <!-- 인식된 상태 (분홍 박스) -->
