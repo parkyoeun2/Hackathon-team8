@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from conditions_api import router as conditions_router
+from rest_spots_api import router as rest_spots_router
 from route_service_v02 import RouteServiceError, recommend_routes
 from schemas import ErrorResponse, RouteRequest, RouteResponse
 from web import install_frontend
@@ -13,6 +14,7 @@ from web import install_frontend
 
 app = FastAPI()
 app.include_router(conditions_router)
+app.include_router(rest_spots_router)
 install_frontend(app)
 
 

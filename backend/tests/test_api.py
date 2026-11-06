@@ -146,7 +146,7 @@ class RouteApiTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(
             set(document["paths"]),
-            {"/health", "/api/routes", "/api/conditions/parse"},
+            {"/health", "/api/routes", "/api/conditions/parse", "/api/rest-spots"},
         )
 
         def resolve(schema):

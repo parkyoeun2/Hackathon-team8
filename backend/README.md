@@ -135,3 +135,48 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/conditions/parse -
 ```
 
 새 API를 추가한 뒤 기존 서버를 사용 중이었다면 `Ctrl+C`로 종료하고 서버 시작 명령으로 다시 실행합니다.
+
+### P9-A: 휴식 공간 후보 API
+
+동일한 FastAPI 서버에 `GET /api/rest-spots`를 추가했습니다. 프론트는 동일 출처의 `/api/rest-spots`로 GET 요청하면 됩니다. P9-A에는 화면·마커 변경이나 경로 계산 반영이 없습니다.
+
+`backend/data/manual_rest_spots.json`은 A가 제공한 원본 파일을 내용 변경 없이 보관한 정적 시연 데이터입니다. 실행 시 Overpass나 다른 외부 API를 호출하지 않습니다. 원본 후보 4곳의 순서를 유지하며, 매 요청마다 모듈 파일 기준 경로로 읽고 검증합니다. 현재 작업 디렉터리에 의존하지 않고, 잘못된 항목을 빼고 성공 응답을 만들지도 않습니다.
+
+응답 최상위 필드는 `restSpots`(후보 4곳), `dataSource`(`manual_rest_spots.json`), `warnings`(공통 안내)입니다.
+
+| 응답 필드 | 원본과 의미 |
+|---|---|
+| `id` | 원본 이름에서 UUID5로 생성한 식별자. 목록 순서가 바뀌어도 유지되며 이름을 변경하면 달라짐 |
+| `name`, `lat`, `lng`, `type`, `note` | 원본 이름·대표 좌표·시설 종류·설명 그대로 |
+| `verificationMethod` | `verification`: `field_observation`은 직접 관찰, `map_visual`은 지도·거리뷰 확인. 실제 확인 시점과 범위는 `note` 참고 |
+| `accessibilityVerified` | `accessibility_verified` 그대로. 현재 4곳 모두 false이며, 접근 가능 여부 미검증을 뜻함 |
+| `benchCount` | `bench_count` 그대로. 현재 꽃동네어린이공원 2, 나머지 null. null은 벤치 부재가 아닌 개수 미확인 |
+| `restFeatures` | `rest_features` 그대로. 벤치·의자 등 기록된 시설 특성 |
+| `address`, `osmName` | 원본 `address`, `osm_name`. 원본에 없으면 null |
+| `streetviewLat`, `streetviewLng` | 원본 거리뷰 확인 지점. 후보 대표 좌표와 구분하며, 원본에 없으면 null |
+
+꽃동네어린이공원의 원본 OSM 이름은 꽃동네놀이터입니다. 2026년 2월 거리뷰에 보이는 벤치 2개를 현재 상태로 보장하지 않습니다. 대학 안의 후보는 외부인 이용 가능 여부도 미확인입니다.
+
+`note` 속 130.9m 등은 A가 특정 시연 경로와 시설 경계 또는 대표 지점 사이에서 계산한 직선거리입니다. 모든 경로에 적용하거나 현재 경로의 보행 접근거리·우회거리로 표시하면 안 됩니다. API는 거리 지표를 새로 계산하거나 일반화한 거리 필드를 반환하지 않습니다. 공원·놀이터가 모두 벤치를 갖고 있다고 가정하지 않으며, 후보를 이용 가능·무장애 공간으로 보장하지 않습니다.
+
+파일 누락·읽기 실패·잘못된 JSON·형식 오류·중복 후보는 `503 DATA_UNAVAILABLE`로 반환합니다. 형식은 기존 `{"error":{"code":"DATA_UNAVAILABLE","message":"..."}}`이며, 내부 경로나 검증 상세를 노출하지 않습니다. 쉼터 자료가 실패해도 기존 health·경로·상태 분석 API의 동작은 유지됩니다. 기존 API 계약은 그대로이며, OpenAPI의 허용 경로 목록에 새 GET만 추가했습니다.
+
+저장소 루트(통합 worktree)에서 실행합니다. 아래 Python 경로는 현재 PC의 기존 가상환경 기준입니다.
+
+```powershell
+$naranhiPython = (Resolve-Path '..\..\backend\.venv\Scripts\python.exe').Path
+& $naranhiPython -B -m uvicorn main:app --app-dir backend --host 127.0.0.1 --port 8000
+```
+
+예상 결과는 Uvicorn 시작 안내입니다. 별도 PowerShell 터미널에서 요청하면 후보 4곳과 안내가 출력됩니다.
+
+```powershell
+Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:8000/api/rest-spots' |
+    ConvertTo-Json -Depth 8
+
+& $naranhiPython -B -m unittest discover -s backend/tests -v
+```
+
+두 번째 터미널에서는 `$naranhiPython` 변수를 같은 명령으로 먼저 설정합니다. 테스트는 임시 HTTP 서버와 임시 파일로 실패를 재현하며, 실제 데이터와 A의 예시 JSON을 수정하지 않습니다.
+
+P9-B에서는 이 API를 호출해 후보 ID별 Leaflet 마커·팝업을 연결하고 `note`·`warnings`·미확인 상태를 표시하면 됩니다. 벤치 개수가 확인되지 않았을 때 0으로 바꾸거나 접근성을 보장하는 마커를 쓰면 안 됩니다. 경로 점수 반영, 보행 접근 경로·우회거리, 실시간 시설 상태는 이번 API에 포함되지 않습니다.

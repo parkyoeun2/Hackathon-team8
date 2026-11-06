@@ -278,7 +278,7 @@ class WebServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(
             set(json.loads(body)["paths"]),
-            {"/health", "/api/routes", "/api/conditions/parse"},
+            {"/health", "/api/routes", "/api/conditions/parse", "/api/rest-spots"},
         )
 
     def test_real_parse_and_routes_work_on_the_same_server(self):

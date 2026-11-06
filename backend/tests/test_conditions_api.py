@@ -180,7 +180,7 @@ class ConditionsApiTests(unittest.TestCase):
         status, document = self.request(path="/openapi.json", method="GET")
         self.assertEqual(status, 200)
         self.assertEqual(set(document["paths"]), {
-            "/health", "/api/routes", "/api/conditions/parse"
+            "/health", "/api/routes", "/api/conditions/parse", "/api/rest-spots"
         })
         operation = document["paths"]["/api/conditions/parse"]["post"]
         components = document["components"]["schemas"]
