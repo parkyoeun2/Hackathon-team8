@@ -668,6 +668,143 @@
       window.clearTimeout(timeout);
     }
   }
+  // P10: 사용자가 요청했을 때만 브라우저 GPS를 지도에 표시합니다.
+  // 경로 재계산이나 좌표의 서버 전송·저장은 하지 않습니다.
+  function setupLiveLocation(leaflet, map) {
+    const controls = byId("live-location-controls");
+    const startButton = byId("live-location-start");
+    const stopButton = byId("live-location-stop");
+    const centerButton = byId("live-location-center");
+    if (!controls || !startButton || !stopButton || !centerButton) return;
+
+    let watchId = null;
+    let positionMarker = null;
+    let accuracyCircle = null;
+    let headingMarker = null;
+    let latestPosition = null;
+    controls.hidden = false;
+
+    function stopTracking() {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      [positionMarker, accuracyCircle, headingMarker].forEach((layer) => {
+        if (layer) map.removeLayer(layer);
+      });
+      positionMarker = null;
+      accuracyCircle = null;
+      headingMarker = null;
+      latestPosition = null;
+      startButton.disabled = false;
+      startButton.hidden = false;
+      stopButton.hidden = true;
+      centerButton.hidden = true;
+    }
+
+    function onPosition(position) {
+      const { latitude, longitude, accuracy, heading } = position.coords;
+      if (!isNumber(latitude) || !isNumber(longitude) ||
+        Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+        message("live-location-status", "받은 위치 좌표가 올바르지 않아요.");
+        return;
+      }
+
+      const point = leaflet.latLng(latitude, longitude);
+      latestPosition = point;
+      if (!positionMarker) {
+        positionMarker = leaflet.circleMarker(point, {
+          radius: 9, color: "#ffffff", weight: 3,
+          fillColor: "#2563eb", fillOpacity: 1, interactive: false,
+        }).addTo(map);
+      } else {
+        positionMarker.setLatLng(point);
+      }
+
+      if (isNumber(accuracy) && accuracy >= 0) {
+        if (!accuracyCircle) {
+          accuracyCircle = leaflet.circle(point, {
+            radius: accuracy, color: "#2563eb", weight: 1,
+            fillColor: "#2563eb", fillOpacity: 0.1, interactive: false,
+          }).addTo(map);
+          positionMarker.bringToFront();
+        } else {
+          accuracyCircle.setLatLng(point);
+          accuracyCircle.setRadius(accuracy);
+        }
+      } else if (accuracyCircle) {
+        map.removeLayer(accuracyCircle);
+        accuracyCircle = null;
+      }
+
+      // 기기에서 실제 이동 방위를 제공한 경우에만 화살표를 표시합니다.
+      if (isNumber(heading) && heading >= 0 && heading <= 360) {
+        const icon = leaflet.divIcon({
+          className: "live-heading-container", iconSize: [40, 40], iconAnchor: [20, 20],
+          html: `<span class="live-heading-arrow" style="transform:rotate(${heading}deg)">▲</span>`,
+        });
+        if (!headingMarker) {
+          headingMarker = leaflet.marker(point, {
+            icon, interactive: false, keyboard: false,
+          }).addTo(map);
+        } else {
+          headingMarker.setLatLng(point);
+          headingMarker.setIcon(icon);
+        }
+      } else if (headingMarker) {
+        map.removeLayer(headingMarker);
+        headingMarker = null;
+      }
+
+      centerButton.hidden = false;
+      const accuracyText = isNumber(accuracy) && accuracy >= 0
+        ? `위치 오차 범위 약 ${Math.round(accuracy)}m`
+        : "정확도 정보 미확인";
+      const caution = isNumber(accuracy) && accuracy > 100
+        ? " 정확도가 낮아 실제 위치와 차이가 클 수 있어요." : "";
+      message("live-location-status", `파란 점은 현재 위치예요. ${accuracyText}.${caution}`);
+    }
+
+    function onError(error) {
+      const explanation = error.code === 1
+        ? "위치 권한이 거부됐어요. 브라우저 설정에서 허용한 뒤 다시 시도해 주세요."
+        : error.code === 2
+          ? "현재 위치를 확인할 수 없어요. 기기 위치 설정과 인터넷 연결을 확인해 주세요."
+          : "위치 확인 시간이 초과됐어요. 잠시 후 다시 시도해 주세요.";
+      stopTracking();
+      message("live-location-status", explanation);
+    }
+
+    startButton.addEventListener("click", () => {
+      if (watchId !== null) return;
+      if (!window.isSecureContext || !navigator.geolocation) {
+        message("live-location-status", "이 기기에서는 위치 기능을 사용할 수 없어요. 휴대폰에서 HTTPS 주소로 접속해 주세요.");
+        return;
+      }
+      message("live-location-status", "위치 권한을 확인하고 있어요. 잠시만 기다려 주세요.");
+      startButton.disabled = true;
+      try {
+        watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+          enableHighAccuracy: true, maximumAge: 5000, timeout: 15000,
+        });
+        startButton.hidden = true;
+        stopButton.hidden = false;
+      } catch (_) {
+        stopTracking();
+        message("live-location-status", "위치 기능을 시작할 수 없어요. 기기 설정을 확인해 주세요.");
+      }
+    });
+
+    stopButton.addEventListener("click", () => {
+      stopTracking();
+      message("live-location-status", "위치 표시를 중지했어요.");
+    });
+    centerButton.addEventListener("click", () => {
+      if (latestPosition) map.setView(latestPosition, Math.max(map.getZoom(), 16));
+    });
+    window.addEventListener("pagehide", stopTracking);
+  }
+
   // ZIP의 지도 코드에서 좌표 변환·경로선·끝점 마커만 선별했습니다.
   // result/check는 SVG를 사용하며, Leaflet은 route에서만 초기화합니다.
   function renderRouteMap(container, trip, selectedRoute) {
@@ -715,6 +852,7 @@
       window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
       // 기존 경로 지도를 유지하면서 쉼터 후보를 별도로 표시
       void showRestSpotsOnMap(leaflet, map);
+      setupLiveLocation(leaflet, map);
     } catch (_) {
       if (map) map.remove();
       container.replaceChildren();

@@ -27,6 +27,16 @@
     <p id="form-error" class="error-message" role="alert" hidden></p>
     <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
     <p id="map-warning" class="map-warning" role="status" aria-live="polite" hidden></p>
+    <section id="live-location-controls" class="live-location-controls" aria-label="현재 위치 표시" hidden>
+      <div class="live-location-buttons">
+        <button id="live-location-start" type="button" class="live-location-button">📍 내 위치 표시 시작</button>
+        <button id="live-location-stop" type="button" class="live-location-button" hidden>위치 표시 중지</button>
+        <button id="live-location-center" type="button" class="live-location-button" hidden>내 위치로 이동</button>
+      </div>
+      <p id="live-location-status" class="live-location-status" role="status" aria-live="polite">
+        버튼을 누르면 위치 권한을 요청해요. 위치 정보는 나란히 서버에 저장하지 않아요.
+      </p>
+    </section>
     <figure class="route-map-box">
       <div id="route-map" class="route-map route-map--leaflet" role="region"
         aria-label="선택한 실제 경로 지도" aria-describedby="map-endpoint-note"></div>

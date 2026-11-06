@@ -1780,3 +1780,73 @@ body > noscript {
 .rest-spot-popup-caution {
   color: #526158;
 }
+
+/* P10: 상세 지도 현재 위치 표시 버튼과 GPS 방위 화살표 */
+.live-location-controls {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #cadfd2;
+  border-radius: 12px;
+  background: #f3f8f4;
+}
+
+.live-location-controls[hidden],
+.live-location-button[hidden] {
+  display: none;
+}
+
+.live-location-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.live-location-button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #2b7050;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #19482f;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-location-button:focus-visible {
+  outline: 3px solid #d6a234;
+  outline-offset: 2px;
+}
+
+.live-location-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.live-location-status {
+  margin: 9px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #40574a;
+  overflow-wrap: anywhere;
+}
+
+.live-heading-container {
+  border: 0;
+  background: transparent;
+}
+
+.live-heading-arrow {
+  position: absolute;
+  left: 10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  color: #1d4ed8;
+  text-align: center;
+  font-size: 18px;
+  line-height: 20px;
+  text-shadow: 0 1px 2px #ffffff;
+  transform-origin: 10px 30px;
+}
