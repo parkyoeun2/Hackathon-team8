@@ -1725,3 +1725,14 @@ body > noscript {
 .explanation-uncertainties ul { padding-left: 18px; }
 .explanation-uncertainties li + li { margin-top: 4px; }
 .explanation-fallback { font-size: 1rem; color: #42594b; }
+
+/* 상세 화면의 최대 경사 직각삼각형 비교 */
+.slope-illust[hidden] { display: none !important; }
+.slope-chart-area { flex: 1; min-width: 0; }
+.slope-chart-area svg { display: block; width: 100%; height: auto; max-height: 155px; overflow: visible; }
+.slope-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; font-size: 12px; color: var(--color-text-sub); }
+.slope-legend span::before { content: ""; display: inline-block; width: 24px; margin-right: 6px; vertical-align: middle; border-top: 3px solid #4f6958; }
+.slope-legend .slope-legend-shortest::before { border-top: 3px dashed #4f6958; }
+
+/* 경사 비교는 상세 카드 안의 기본 추천 이유 바로 위에 배치 */
+.route-detail .route-card .slope-illust { margin: 16px 0 14px; width: 100%; box-sizing: border-box; }
