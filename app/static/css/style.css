@@ -1561,100 +1561,6 @@ body > noscript {
   }
 }
 
-/* P6: 결과 미리보기는 SVG, 상세 화면만 Leaflet 지도입니다. */
-.route-preview-link {
-  display: block;
-  min-width: 0;
-  margin: 8px 0 16px;
-  border-radius: 14px;
-  color: var(--color-primary-active);
-  text-decoration: none;
-}
-.route-preview {
-  border-radius: 14px;
-}
-.route-map.route-preview svg {
-  max-height: 180px;
-}
-.preview-caption {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}
-.route-map--leaflet {
-  display: block;
-  height: clamp(280px, 52vh, 420px);
-  min-width: 0;
-  max-width: 100%;
-  isolation: isolate;
-}
-.route-map--leaflet .leaflet-control-attribution {
-  max-width: 100%;
-  white-space: normal;
-  font-size: 11px;
-}
-.route-map--leaflet .leaflet-tooltip {
-  font-family: inherit;
-}
-.map-warning {
-  padding: 12px 14px;
-  margin: 10px 0 16px;
-  border-radius: 12px;
-  color: #92400e;
-  background: #fff4c4;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-/* P6: 결과 미리보기는 SVG, 상세 화면만 Leaflet 지도입니다. */
-.route-preview-link {
-  display: block;
-  min-width: 0;
-  margin: 8px 0 16px;
-  border-radius: 14px;
-  color: var(--color-primary-active);
-  text-decoration: none;
-}
-.route-preview {
-  border-radius: 14px;
-}
-.route-map.route-preview svg {
-  max-height: 180px;
-}
-.preview-caption {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}
-.route-map--leaflet {
-  display: block;
-  height: clamp(280px, 52vh, 420px);
-  min-width: 0;
-  max-width: 100%;
-  isolation: isolate;
-}
-.route-map--leaflet .leaflet-control-attribution {
-  max-width: 100%;
-  white-space: normal;
-  font-size: 11px;
-}
-.route-map--leaflet .leaflet-tooltip {
-  font-family: inherit;
-}
-.map-warning {
-  padding: 12px 14px;
-  margin: 10px 0 16px;
-  border-radius: 12px;
-  color: #92400e;
-  background: #fff4c4;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
 /* ===== 05 상세: 완만한 길 설명 그림 (연초록 상자) ===== */
 .slope-illust {
   margin: 14px 0 0;
@@ -1691,3 +1597,131 @@ body > noscript {
 
 /* 값(0개, 정보 미확인)은 계속 오른쪽 끝에 */
 .route-stats li > span { margin-left: auto; }
+/* P6: 결과 미리보기는 SVG, 상세 화면만 Leaflet 지도입니다. */
+.route-preview-link {
+  display: block;
+  min-width: 0;
+  margin: 8px 0 16px;
+  border-radius: 14px;
+  color: var(--color-primary-active);
+  text-decoration: none;
+}
+.route-preview {
+  border-radius: 14px;
+}
+.route-map.route-preview svg {
+  max-height: 180px;
+}
+.preview-caption {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.route-map--leaflet {
+  display: block;
+  height: clamp(280px, 52vh, 420px);
+  min-width: 0;
+  max-width: 100%;
+  isolation: isolate;
+}
+.route-map--leaflet .leaflet-control-attribution {
+  max-width: 100%;
+  white-space: normal;
+  font-size: 11px;
+}
+.route-map--leaflet .leaflet-tooltip {
+  font-family: inherit;
+}
+.map-warning {
+  padding: 12px 14px;
+  margin: 10px 0 16px;
+  border-radius: 12px;
+  color: #92400e;
+  background: #fff4c4;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* P8: 실제 수치 비교와 데이터 한계를 구분합니다. */
+.route-number {
+  align-self: flex-start;
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: var(--color-primary-active);
+  background: #eaf2ec;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.route-card .route-number + .route-label { margin-top: 4px; }
+.route-explanations {
+  margin: 12px 0 16px;
+  padding: 14px 12px;
+  border: 1px solid #dce8e0;
+  border-radius: 12px;
+  background: #f7faf8;
+  color: var(--color-text-main);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.explanation-title { font-size: 0.9375rem; margin: 0 0 8px; }
+.explanation-facts { margin: 0; padding-left: 18px; }
+.explanation-facts li + li { margin-top: 6px; }
+.explanation-conditions {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #dce8e0;
+}
+.explanation-conditions p + p { margin-top: 6px; }
+.explanation-fallback { color: var(--color-text-sub); }
+.explanation-uncertainties {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff4c4;
+  color: #92400e;
+  font-size: 0.8125rem;
+}
+.explanation-uncertainties h4 { font-size: inherit; margin: 0 0 4px; }
+.explanation-uncertainties ul { margin: 0; padding-left: 16px; }
+.explanation-uncertainties li + li { margin-top: 6px; }
+.route-card .reason-heading { font-size: 0.9375rem; margin: 12px 0 0; }
+
+/* P8 마무리: 핵심 거리와 문장, 조건 키워드 중심의 밝은 화면. */
+.route-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; min-width: 0; }
+.route-heading { flex: 1; min-width: 0; }
+.route-card-header .route-label { font-size: 1.25rem; line-height: 1.4; overflow-wrap: anywhere; }
+.route-type-badge {
+  flex: 0 1 auto; max-width: 48%; padding: 5px 9px; margin-top: 2px;
+  border: 1px solid #c9dccc; border-radius: 999px;
+  color: #244b36; background: #e8f2eb; font-size: 0.875rem; line-height: 1.45; font-weight: 700;
+  text-align: center; overflow-wrap: anywhere;
+}
+.route-card-header + .route-main, .route-preview-link + .route-main { margin: 14px 0 16px; }
+.route-card-header + .route-main .route-distance, .route-preview-link + .route-main .route-distance { font-size: 2.25rem; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em; color: #173f2e; }
+.route-explanations { padding: 0; margin: 0 0 18px; border: none; border-radius: 0; background: transparent; font-size: 1rem; line-height: 1.65; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.explanation-facts { padding-left: 0; margin: 0 0 14px; list-style: none; font-size: 1.25rem; line-height: 1.55; font-weight: 700; color: #173f2e; }
+.explanation-facts li + li { margin-top: 10px; }
+.explanation-summary { margin: 8px 0; color: #30483a; }
+.explanation-slope { margin: 10px 0 14px; }
+.slope-preference { color: #30483a; }
+.slope-caution { margin-top: 4px; color: #526158; font-size: 0.9375rem; }
+.explanation-conditions { margin-top: 16px; padding-top: 0; border-top: none; }
+.keyword-heading { margin-bottom: 8px; font-size: 1rem; color: #253f30; }
+.condition-keywords { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.condition-keyword {
+  flex: 0 1 calc(50% - 4px); min-width: 0; padding: 7px 9px; border: 1px solid #ccdecf; border-radius: 10px;
+  color: #244b36; background: #edf5ee; font-size: 0.9375rem; line-height: 1.5; font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.keyword-empty { margin: 0; color: #42594b; }
+.explanation-uncertainties { margin-top: 18px; padding: 12px; border: 1px solid #d4e3d8; border-radius: 12px; color: #31483c; background: #eef5ef; font-size: 0.9375rem; line-height: 1.65; }
+.explanation-uncertainties h4 { font-size: 1rem; margin-bottom: 6px; color: #253f30; }
+.explanation-uncertainties ul { padding-left: 18px; }
+.explanation-uncertainties li + li { margin-top: 4px; }
+.explanation-fallback { font-size: 1rem; color: #42594b; }
