@@ -4,109 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나란히 - 경로 비교 결과</title>
-  <!-- CSS는 프론트엔드2가 작성 -->
   <link rel="stylesheet" href="../static/css/style.css">
+  <script src="../static/js/script.js" defer></script>
 </head>
-<body>
-
-  <!-- ===== 상단: 로고 ===== -->
+<body data-page="result">
   <header class="header">
     <a href="home.html" class="logo">
       <img src="../static/img/logo-leaf.svg" alt="">
       <span>나란히</span>
     </a>
   </header>
-
-  <!-- ===== 본문: 04 경로 비교 결과 v2 (ROUTE-01 응답, 내용은 프론트엔드2가 JS로 채움) ===== -->
   <main class="result">
-
-    <!-- 1. 제목 구역 -->
     <section class="result-intro">
-      <h1>나에게 맞는 길을 찾았어요</h1>
-      <!-- 출발/도착: 홈에서 입력한 글자 (예시) -->
-      <p class="route-summary">
-        <strong class="route-start">우리 집</strong>
-        <span aria-hidden="true">→</span>
-        <strong class="route-end">덕성여자대학교</strong>
-      </p>
-      <!-- 적용된 조건: 저장된 프로필 + today (예시) -->
-      <p class="applied-conditions">나의 이동 프로필 + 오늘의 조건</p>
+      <h1>추천 경로 비교</h1>
+      <p id="trip-summary" class="route-summary"></p>
+      <p class="applied-conditions">이동 프로필과 승인한 오늘 상태를 반영한 경로예요.</p>
     </section>
-
-    <!-- 전체 안내 (ROUTE-01 warnings, 없으면 숨김) -->
-    <p class="result-warning" role="alert" hidden></p>
-
-    <!-- 2. 경로 카드 목록 (routes[] 1~3개, 아래 카드는 예시) -->
-    <ul class="route-list">
-
-      <!-- 경로 1: 추천 -->
-      <li>
-        <article class="route-card is-recommended">
-          <h2 class="route-label">나에게 편한 길 <span class="badge">· 추천</span></h2>
-          <!-- 시간 · 거리(distanceM) -->
-          <p class="route-main">
-            <span class="route-time">18분</span>
-            <span aria-hidden="true">·</span>
-            <span class="route-distance">1.1km</span>
-          </p>
-          <!-- stairsCount / maxSlopePercent / crosswalkCount (문장은 값에 따라 JS가 만듦) -->
-          <ul class="route-stats">
-            <li>
-              <img class="stat-icon" src="../static/img/stat-stairs.svg" alt="">
-              <span class="stat-stairs">계단 없이 갈 수 있어요</span>
-            </li>
-            <li>
-              <!-- 완만하면 stat-slope-gentle, 가파르면 stat-slope-steep 아이콘 -->
-              <img class="stat-icon" src="../static/img/stat-slope-gentle.svg" alt="">
-              <span class="stat-slope">경사가 비교적 완만해요 · 최대 4%</span>
-            </li>
-            <li>
-              <img class="stat-icon" src="../static/img/stat-crosswalk.svg" alt="">
-              <span class="stat-crosswalks">횡단 3회가 있어요</span>
-            </li>
-          </ul>
-          <!-- 추천 이유 (reason) -->
-          <h3 class="route-reason-title">왜 이 길을 추천하나요?</h3>
-          <p class="route-reason">가장 빠른 길보다 4분 더 걸리지만, 계단이 없고 경사가 더 완만해요.</p>
-          <!-- 경로별 주의사항 (routes[].warnings, 없으면 숨김) -->
-          <ul class="route-warnings" hidden></ul>
-          <a href="route.html" class="route-link">이 경로 보기 <span aria-hidden="true">→</span></a>
-        </article>
-      </li>
-
-      <!-- 경로 2 -->
-      <li>
-        <article class="route-card">
-          <h2 class="route-label">가장 빠른 길</h2>
-          <p class="route-main">
-            <span class="route-time">14분</span>
-            <span aria-hidden="true">·</span>
-            <span class="route-distance">850m</span>
-          </p>
-          <ul class="route-stats">
-            <li>
-              <img class="stat-icon" src="../static/img/stat-stairs.svg" alt="">
-              <span class="stat-stairs">계단이 있어요 · 24개</span>
-            </li>
-            <li>
-              <img class="stat-icon" src="../static/img/stat-slope-steep.svg" alt="">
-              <span class="stat-slope">가파른 구간이 있어요 · 최대 12%</span>
-            </li>
-            <br>
-            <li>
-              <img class="stat-icon" src="../static/img/stat-crosswalk.svg" alt="">
-              <span class="stat-crosswalks">횡단 2회</span>
-            </li>
-          </ul>
-          <p class="route-reason">4분 빠르지만 계단과 가파른 구간을 지나야 해요.</p>
-          <ul class="route-warnings" hidden></ul>
-          <a href="route.html" class="route-link">이 경로 보기 <span aria-hidden="true">→</span></a>
-        </article>
-      </li>
-
-    </ul>
-
+    <p id="same-route-message" class="status-message" role="status" hidden></p>
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <div id="routes-container" class="route-list" role="radiogroup" aria-label="추천 경로 선택"></div>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>표시할 경로가 없어요</h2>
+      <p>출발지와 목적지를 선택해 경로를 다시 찾아주세요.</p>
+      <a href="home.html" class="btn-primary">경로 찾기로 돌아가기</a>
+    </section>
+    <p class="data-note">정보 미확인은 0과 달라요. 경로별 경고와 확인 가능한 지표를 함께 살펴보세요.</p>
+    <a href="home.html" class="back-link">출발지·목적지 다시 선택하기</a>
   </main>
-
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>
 </html>

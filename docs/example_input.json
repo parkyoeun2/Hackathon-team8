@@ -1,0 +1,16 @@
+{
+  "start": {
+    "lat": 37.6529198,
+    "lng": 127.0217091
+  },
+  "end": {
+    "lat": 37.6535614,
+    "lng": 127.0217959
+  },
+  "profile": {
+    "stairs": "avoid"
+  },
+  "today": {
+    "stroller": true
+  }
+}
