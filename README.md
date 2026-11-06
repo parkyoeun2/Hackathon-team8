@@ -1,6 +1,6 @@
 # Hackathon-team8
 
-## P5/P6 통합 실행
+## P5/P6/P7 통합 실행
 
 FastAPI 한 서버가 HTML 5개와 `/static`의 CSS·JavaScript·이미지를 제공하고, 같은 출처의 `/api/routes`, `/api/conditions/parse`를 처리합니다. Flask나 별도 프론트 빌드 서버는 사용하지 않습니다. P5 기준 커밋은 `a338762`이며, P6는 같은 worktree의 `feature/p6-leaflet-integration` 브랜치에서 작업합니다. 기존 P5 브랜치는 보존합니다.
 
@@ -21,7 +21,7 @@ $naranhiPython = (Resolve-Path '..\..\backend\.venv\Scripts\python.exe').Path
 ### 화면 흐름
 
 1. 프로필: 네 토글을 API 값으로 바꾸어 브라우저 localStorage에 저장합니다. 편안한 길 우선은 `comfortFirst`와 `detourAllowed`를 함께 설정합니다.
-2. 홈: 검증된 시연 장소 두 곳을 선택합니다. 이름을 자유 입력하거나 외부 지오코딩 서비스를 호출하지 않습니다.
+2. 홈: 시연 장소 네 곳 중 서로 다른 출발지와 목적지를 선택합니다. 이름을 자유 입력하거나 외부 지오코딩 서비스를 호출하지 않습니다.
 3. 오늘 상태: 텍스트가 있으면 규칙 기반 분석 결과·경고를 확인하고 수정한 뒤 적용합니다. 텍스트가 없으면 분석 화면을 건너뜁니다. 원문은 서버 로그·브라우저 저장소에 보관하지 않습니다.
 4. 비교: 실제 API 경로 1~3개를 반환된 이름으로 표시합니다. 동일 경로 안내와 별개로 대안은 유지합니다.
 5. 상세·경고 상태: 선택한 경로 ID의 좌표·지표·경고를 표시합니다. 결과와 선택 ID는 현재 탭 sessionStorage에 보관하며 결과가 없으면 다시 검색하도록 안내합니다.
@@ -50,7 +50,7 @@ Leaflet CSS·JS는 `https://unpkg.com/leaflet@1.9.4/dist/`의 고정 버전을 S
 
 ```powershell
 $env:NARANHI_TEST_URL = 'http://127.0.0.1:8000'
-$env:NARANHI_TEST_ARTIFACTS = '.p5-artifacts/p6-leaflet'
+$env:NARANHI_TEST_ARTIFACTS = '.p5-artifacts/p7-demo-places'
 # 현재 PC에서 확인한 테스트 도구 경로입니다. 다른 PC에서는 설치된 경로로 바꿉니다.
 $env:NARANHI_PLAYWRIGHT_MODULE = 'C:\Users\kmj00\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules\playwright'
 $env:NARANHI_CHROME_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
@@ -59,3 +59,23 @@ $naranhiNode = 'C:\Users\kmj00\.cache\codex-runtimes\codex-primary-runtime\depen
 ```
 
 스크린샷과 브라우저 보고서는 Git에서 제외한 `.p5-artifacts/`에 생성됩니다. `backend/test_route_service_v02.py`는 예시 JSON을 쓰므로 직접 실행하지 않습니다.
+
+
+### P7 시연 장소
+
+P7 작업 브랜치는 `feature/p7-demo-places`이며 기준은 P6 커밋 `f167999`입니다. 기존 JSON 구조와 두 장소를 유지하고 다음 네 곳을 제공합니다.
+
+| ID | 장소 | 위도 | 경도 |
+|---|---|---:|---:|
+| `duksung_gate` | 덕성여대 정문 | 37.6517 | 127.0149 |
+| `hyomun_gate` | 효문중고 출입구 | 37.6526 | 127.0174 |
+| `duksung_dorm` | 덕성여대 기숙사 | 37.6491330337407 | 127.022277801401 |
+| `april19_station_exit1` | 4·19민주묘지역 1번 출구 | 37.649707 | 127.013733 |
+
+**역 1번 출구와 실제 4·19민주묘지 입구는 다른 장소입니다.** 목록에는 역 출구를 추가했습니다.
+
+A가 계산하는 `distanceM`은 보행 네트워크 경로의 구간 길이 합입니다. 입력 지점에서 최근접 보행 노드까지의 직선거리(기숙사 약 50.6m, 역 출구 약 90.3m)는 실제 이동 가능한 동선이나 보행 거리로 검증되지 않았으며, 경로 거리에 임의로 더하지 않습니다.
+
+기본 프로필의 기숙사 ↔ 역 출구 대표 경로는 A 기준 1121.3m, 좌표 53개, 확인된 계단 0개, 경사 데이터 확인율 19.7%, `sameRoute:true`입니다. 이 값은 접근성이나 실제 현장 상태를 보장하지 않습니다. 화면은 항상 API가 반환한 값을 표시합니다.
+
+추가 HTTP 테스트는 네 장소의 서로 다른 12개 방향 × 일반·캐리어·유모차 3조건을 검증합니다. Chrome 테스트는 기존 9개 흐름과 새 두 장소의 정·역방향·세 조건 6개 흐름을 검증하고, `.p5-artifacts/p7-demo-places/`에 별도 보고서를 저장합니다.

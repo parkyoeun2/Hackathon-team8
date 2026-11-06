@@ -5,7 +5,7 @@ const path = require('node:path');
 const { chromium } = require(process.env.NARANHI_PLAYWRIGHT_MODULE || 'playwright');
 
 const base = process.env.NARANHI_TEST_URL || 'http://127.0.0.1:8001';
-const artifacts = path.resolve(process.env.NARANHI_TEST_ARTIFACTS || '.p5-artifacts');
+const artifacts = path.resolve(process.env.NARANHI_TEST_ARTIFACTS || '.p5-artifacts/p7-demo-places');
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const TILE_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -16,6 +16,7 @@ const rawText = '캐리어가 있어요. 계단은 피하고 싶어요.';
 const profile = { stairs: 'avoid', detourAllowed: true, gentleSlope: true,
   crosswalks: 'allowed', comfortFirst: true };
 const completed = [];
+const p7Cases = [];
 const errors = [];
 const externalRequests = [];
 const requests = [];
@@ -187,7 +188,7 @@ async function assertLeafletRoute(page, response, chosen) {
   let result, chosen, routeStatus, backgroundTilesVisible = false;
   function report(status, error) {
     const mainTiles = networkResponses.filter(item => item.case === 'main' && TILE_URL.test(item.url));
-    return { status, passed: completed.length, checks: completed,
+    return { status, passed: completed.length, checks: completed, p7Cases,
       routeApi: result ? { status: routeStatus, count: result.routes.length, sameRoute: result.sameRoute,
         routes: result.routes.map(({ id, label, distanceM, ascentM, maxSlopePercent,
           gradeCoveragePercent, stairsCount, crosswalkCount, coordinates }) => ({
@@ -401,6 +402,135 @@ async function assertLeafletRoute(page, response, chosen) {
     await shot(tilesPage, 'osm-tile-failure-mobile');
     completed.push('OSM tile failure keeps real selected route geometry and displays background warning');
     await closeContext(tilesFailure);
+
+    // P7: keep the P6 scenarios above and exercise new places through the UI.
+    const p7 = await preparedHome(browser, 'p7-places');
+    const expectedPlaces = [
+      { id: 'duksung_gate', name: '덕성여대 정문', lat: 37.6517, lng: 127.0149 },
+      { id: 'hyomun_gate', name: '효문중고 출입구', lat: 37.6526, lng: 127.0174 },
+      { id: 'duksung_dorm', name: '덕성여대 기숙사', lat: 37.6491330337407, lng: 127.022277801401 },
+      { id: 'april19_station_exit1', name: '4·19민주묘지역 1번 출구', lat: 37.649707, lng: 127.013733 },
+    ];
+    const dorm = expectedPlaces[2], station = expectedPlaces[3];
+    const directions = [
+      { id: 'station-to-dorm', start: station, end: dorm },
+      { id: 'dorm-to-station', start: dorm, end: station },
+    ];
+    const conditions = [
+      { id: 'normal', text: '', today: null },
+      { id: 'suitcase', text: '캐리어가 있어요', today: { suitcase: true } },
+      { id: 'stroller', text: '유모차를 끌고 있어요', today: { stroller: true } },
+    ];
+    for (const direction of directions) {
+      for (const condition of conditions) {
+        await p7.page.goto(base + '/home.html');
+        await p7.page.locator('#start option[value="duksung_dorm"]').waitFor({ state: 'attached' });
+        for (const id of ['start', 'end']) {
+          const choices = await p7.page.locator('#' + id + ' option').evaluateAll(options =>
+            options.map(option => ({ id: option.value, name: option.textContent.trim() })));
+          assert.deepEqual(choices, expectedPlaces.map(({ id, name }) => ({ id, name })));
+        }
+        await p7.page.selectOption('#start', direction.start.id);
+        await p7.page.selectOption('#end', direction.end.id);
+        await p7.page.fill('#today-status', condition.text);
+        if (condition.id === 'normal')
+          await shot(p7.page, 'p7-' + direction.id + '-home-mobile');
+        const requestOffset = requests.length;
+        let routeResponseP7;
+        if (condition.today) {
+          const [parseResponseP7] = await Promise.all([
+            apiResponse(p7.page, '/api/conditions/parse'), p7.page.click('#parse-button'),
+          ]);
+          assert.equal(parseResponseP7.status(), 200);
+          const parsedP7 = await parseResponseP7.json();
+          assert.deepEqual(parsedP7.today, condition.today);
+          assert.equal(parsedP7.requiresConfirmation, true);
+          await p7.page.locator('#parse-panel').waitFor({ state: 'visible' });
+          assert.equal(requests.slice(requestOffset).filter(item => item.url.endsWith('/api/routes')).length, 0,
+            'new-place route is not requested before condition confirmation');
+          [routeResponseP7] = await Promise.all([
+            apiResponse(p7.page, '/api/routes'), p7.page.click('#parse-confirm-button'),
+          ]);
+        } else {
+          [routeResponseP7] = await Promise.all([
+            apiResponse(p7.page, '/api/routes'), p7.page.click('#search-button'),
+          ]);
+          assert.equal(requests.slice(requestOffset).filter(item => item.url.endsWith('/api/conditions/parse')).length, 0);
+        }
+        assert.equal(routeResponseP7.status(), 200);
+        const submittedP7 = requests.slice(requestOffset).filter(item => item.url.endsWith('/api/routes'));
+        assert.equal(submittedP7.length, 1);
+        assert.deepEqual(submittedP7[0].body.start, { lat: direction.start.lat, lng: direction.start.lng });
+        assert.deepEqual(submittedP7[0].body.end, { lat: direction.end.lat, lng: direction.end.lng });
+        assert.deepEqual(submittedP7[0].body.profile, profile);
+        if (condition.today) assert.deepEqual(submittedP7[0].body.today, condition.today);
+        else assert.equal(Object.prototype.hasOwnProperty.call(submittedP7[0].body, 'today'), false);
+        await p7.page.waitForURL('**/result.html');
+        const savedTripP7 = await p7.page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), TRIP);
+        assert.equal(savedTripP7.start.id, direction.start.id);
+        assert.equal(savedTripP7.end.id, direction.end.id);
+        assert.equal(savedTripP7.start.name, direction.start.name);
+        assert.equal(savedTripP7.end.name, direction.end.name);
+        if (condition.text)
+          assert.ok(!(await p7.page.evaluate(key => sessionStorage.getItem(key), TRIP)).includes(condition.text));
+        const responseP7 = savedTripP7.response;
+        assert.ok(responseP7.routes.length >= 1 && responseP7.routes.length <= 3);
+        const p7Cards = p7.page.locator('.route-card');
+        assert.equal(await p7Cards.count(), responseP7.routes.length);
+        const summaryP7 = await p7.page.locator('#trip-summary').innerText();
+        assert.ok(summaryP7.includes(direction.start.name) && summaryP7.includes(direction.end.name));
+        const sameP7 = await p7.page.locator('#same-route-message').innerText();
+        assert.ok(sameP7.includes(responseP7.sameRoute ? '같습니다' : '서로 다릅니다'));
+        for (let index = 0; index < responseP7.routes.length; index++) {
+          const route = responseP7.routes[index], card = p7Cards.nth(index);
+          assert.equal(await card.getAttribute('data-route-id'), route.id);
+          const cardText = await card.innerText();
+          assert.ok(cardText.includes(route.label));
+          for (const field of ['ascentM', 'maxSlopePercent', 'crosswalkCount']) {
+            const text = await card.locator('[data-field="' + field + '"]').innerText();
+            if (route[field] === null) assert.ok(text.includes('정보 미확인'));
+          }
+          assert.equal(parseFloat(await card.locator('[data-field="gradeCoveragePercent"]').innerText()),
+            route.gradeCoveragePercent);
+          for (const warning of route.warnings) assert.ok(cardText.includes(warning));
+          const points = (await card.locator('.route-preview-link svg polyline').getAttribute('points')).trim().split(/\s+/);
+          assert.equal(points.length, route.coordinates.length);
+        }
+        for (const warning of responseP7.warnings)
+          assert.ok((await p7.page.locator('#global-warnings').innerText()).includes(warning));
+        assert.ok(!/\d+\s*분/.test(await p7.page.locator('body').innerText()));
+        const routeP7 = responseP7.routes[0];
+        await p7.page.locator('.route-card[data-route-id="' + routeP7.id + '"] .route-preview-link').click();
+        await waitForRoute(p7.page, routeP7.id);
+        await assertLeafletRoute(p7.page, responseP7, routeP7);
+        assert.ok((await p7.page.locator('#trip-summary').innerText()).includes(station.name));
+        assert.ok((await p7.page.locator('#route-detail').innerText()).includes(routeP7.label));
+        let newPlaceBackgroundVisible = null;
+        if (condition.id === 'normal') {
+          try {
+            await p7.page.waitForFunction(() => Array.from(document.querySelectorAll('#route-map img.leaflet-tile'))
+              .some(tile => tile.complete && tile.naturalWidth > 0), null, { timeout: 10000 });
+            newPlaceBackgroundVisible = true;
+          } catch (_) {
+            newPlaceBackgroundVisible = false;
+          }
+          await shot(p7.page, 'p7-' + direction.id + '-route-mobile');
+        }
+        assert.deepEqual(await p7.page.evaluate(key => JSON.parse(localStorage.getItem(key)), PROFILE), profile);
+        p7Cases.push({ direction: direction.id, condition: condition.id, status: routeResponseP7.status(),
+          start: direction.start.id, end: direction.end.id,
+          routeCount: responseP7.routes.length, sameRoute: responseP7.sameRoute,
+          backgroundTilesVisible: newPlaceBackgroundVisible,
+          routes: responseP7.routes.map(route => ({ id: route.id, label: route.label,
+            distanceM: route.distanceM, gradeCoveragePercent: route.gradeCoveragePercent,
+            coordinateCount: route.coordinates.length, stairsCount: route.stairsCount,
+            ascentM: route.ascentM, maxSlopePercent: route.maxSlopePercent, crosswalkCount: route.crosswalkCount })),
+        });
+        completed.push('P7 ' + direction.id + ' ' + condition.id + ': four places, exact input coordinates and confirmed state, real SVG and Leaflet route');
+      }
+    }
+    await closeContext(p7.context);
+
 
     assert.deepEqual(errors, []);
     assert.deepEqual(externalRequests.filter(item => !externalAllowed(item.url)), []);
