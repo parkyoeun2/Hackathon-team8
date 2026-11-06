@@ -1571,7 +1571,11 @@ body > noscript {
 .slope-illust-title { font-size: 13px; font-weight: 700; color: var(--color-primary); }
 .slope-illust-graphic { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
 .slope-illust-walker { width: 24px; height: auto; flex-shrink: 0; }
-.slope-illust-line { flex: 1; min-width: 0; height: auto; }
+/* 점선(일반 길)을 바탕으로 깔고 그 위에 실선(내 길)을 바닥 맞춰 겹침 */
+.slope-triangles { position: relative; flex: 1; min-width: 0; margin-top: 16px; }
+.slope-compare { display: block; width: 100%; height: auto; }
+.slope-mine { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; }
+.slope-compare-label { position: absolute; right: 0; top: -16px; font-size: 11px; color: var(--color-text-muted); }
 .slope-illust-note { margin-top: 8px; font-size: 11px; color: var(--color-text-sub); }
 
 /* ===== 경로 정보 줄 앞 아이콘 3개 (경사, 계단, 횡단) ===== */
