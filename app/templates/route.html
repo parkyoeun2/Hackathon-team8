@@ -17,8 +17,11 @@
     </a>
   </header>
 
-  <!-- ===== 본문: 04에서 고른 경로 1개 (routes[] 중 하나, 내용은 프론트엔드2가 JS로 채움) ===== -->
+  <!-- ===== 본문: 05 선택 경로 상세 v2 (routes[] 중 하나, 내용은 프론트엔드2가 JS로 채움) ===== -->
   <main class="route-detail">
+
+    <!-- 다시 선택하기: 04 v2로 돌아가기 (앞의 < 화살표는 CSS로) -->
+    <a href="result.html" class="back-link">다시 선택하기</a>
 
     <!-- 경로 이름 (label) -->
     <h1 class="route-label">나에게 편한 길</h1>
@@ -26,45 +29,65 @@
     <!-- 1. 지도: 실제 지도는 coordinates([경도, 위도])로 JS가 그림. 그 전까지는 시연용 그림 -->
     <figure class="route-map-box">
       <div id="route-map" class="route-map">
-        <img src="../static/img/map-demo.svg" alt="우리 집에서 동네 우체국까지 가는 경로 지도">
+        <img src="../static/img/map-demo.svg" alt="우리 집에서 덕성여자대학교까지 가는 경로 지도">
       </div>
-      <figcaption class="map-caption">우리 집 → 동네 우체국 · 시연용 지도 도식</figcaption>
+      <figcaption class="map-caption">우리 집 → 덕성여자대학교</figcaption>
     </figure>
 
     <!-- 2. 경로 정보 카드 (예시 값) -->
     <section class="route-card">
-      <!-- 시간은 명세서에 없음 (백엔드 확인 중), 거리 = distanceM -->
+      <!-- 시간 · 거리(distanceM) -->
       <p class="route-main">
         <span class="route-time">18분</span>
         <span aria-hidden="true">·</span>
         <span class="route-distance">1.1km</span>
       </p>
-      <!-- maxSlopePercent / stairsCount / crosswalkCount -->
+
+      <h2>이 길은 이런 길이에요</h2>
+      <!-- stairsCount / maxSlopePercent / crosswalkCount (문장은 값에 따라 JS가 만듦) -->
       <ul class="route-stats">
-        <li>최대 경사 <span class="stat-slope">4%</span></li>
-        <li>계단 <span class="stat-stairs">0개</span></li>
-        <li>횡단보도 <span class="stat-crosswalks">3개</span></li>
+        <li>
+          <img class="stat-icon" src="../static/img/stat-stairs.svg" alt="">
+          <span class="stat-stairs">계단 없이 갈 수 있어요</span>
+        </li>
+        <li>
+          <!-- 완만하면 stat-slope-gentle, 가파르면 stat-slope-steep 아이콘 -->
+          <img class="stat-icon" src="../static/img/stat-slope-gentle.svg" alt="">
+          <span class="stat-slope">경사가 비교적 완만해요 · 최대 4%</span>
+        </li>
+        <li>
+          <img class="stat-icon" src="../static/img/stat-crosswalk.svg" alt="">
+          <span class="stat-crosswalks">횡단 3회가 있어요</span>
+        </li>
       </ul>
 
-      <!-- 추천 이유 (reason, ✓ 표시는 CSS로) -->
-      <h2>이 길을 추천하는 이유</h2>
-      <ul class="route-reasons">
-        <li>저장한 이동 프로필을 반영했어요</li>
-        <li>오늘 입력한 "캐리어가 있어요"도 반영했어요</li>
-        <li>계단이 없고 더 완만한 길을 우선했어요</li>
-      </ul>
+      <!-- 기울기 설명 그림 (연초록 상자) -->
+      <figure class="slope-illust">
+        <figcaption class="slope-illust-title">완만한 길</figcaption>
+        <div class="slope-illust-graphic"><img class="slope-illust-walker" src="../static/img/illust-walker.svg" alt=""><img class="slope-illust-line" src="../static/img/illust-slope-line.svg" alt=""></div>
+        <p class="slope-illust-note">기울기 이해를 돕는 설명용 그림이에요.</p>
+      </figure>
+    </section>
 
-      <!-- 경로 주의사항 (routes[].warnings, 없으면 숨김) -->
-      <ul class="route-warnings" hidden></ul>
+    <!-- 경고 상자: routes[].warnings가 있거나 null 값이 있을 때만 보임 (06 디자인과 같은 모양) -->
+    <section class="warning-box" role="note" aria-labelledby="route-warning-title" hidden>
+      <h2 id="route-warning-title" class="warning-title">
+        <img src="../static/img/icon-info.svg" alt="">
+        <span>경사 정보 일부 미확인</span>
+      </h2>
+      <!-- routes[].warnings 문구를 JS가 넣음 -->
+      <ul class="warning-list"><li>일부 구간은 고도 데이터가 충분하지 않아 경사 정보를 제공하지 못할 수 있습니다.</li></ul>
+      <p class="warning-sub">정보 미확인은 경사가 없다는 뜻이 아니에요. 확인된 정보와 함께 경로를 살펴보세요.</p>
     </section>
 
     <!-- 선택 저장 에러 문구 자리 (CHOICE-01, 평소엔 숨김) -->
     <p class="error-message" role="alert" hidden></p>
 
-    <!-- 누르면 CHOICE-01로 선택 기록 저장 (동작은 프론트엔드2가 JS로) -->
+    <!-- 이 경로 선택하기 (동작은 프론트엔드2가 JS로) -->
     <button type="button" class="btn-primary">이 경로 선택하기</button>
 
-    <p class="note">거리·시간·시설 정보는 시연용 예시입니다.</p>
+    <!-- 선택 완료 안내: '이 경로 선택하기'를 누르면 JS가 보여줌 (문구는 임시) -->
+    <p class="select-done" role="status" hidden>이 경로를 선택했어요</p>
 
   </main>
 
