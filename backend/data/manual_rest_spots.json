@@ -1,0 +1,53 @@
+
+[
+  {
+    "name": "꽃동네어린이공원",
+    "osm_name": "꽃동네놀이터",
+    "lat": 37.65059165,
+    "lng": 127.02294905,
+    "type": "playground",
+    "rest_features": ["bench", "swing"],
+    "bench_count": 2,
+    "verification": "map_visual",
+    "streetview_lat": 37.650631686052236,
+    "streetview_lng": 127.02297231963657,
+    "accessibility_verified": false,
+    "note": "2026년 2월 거리뷰에서 벤치 2개와 그네 2개 확인. 실제 벤치 위치와 현재 이용 가능 여부는 미확인. 기숙사 경로에서 공원 경계까지 직선거리 약 130.9m."
+  },
+  {
+    "name": "덕성여대 학생회관 앞 벤치",
+    "lat": 37.651557913654656,
+    "lng": 127.01622407544497,
+    "address": "서울특별시 도봉구 삼양로144길 33",
+    "type": "campus_bench_area",
+    "rest_features": ["bench"],
+    "bench_count": null,
+    "verification": "field_observation",
+    "accessibility_verified": false,
+    "note": "학생회관 앞 벤치 다수 직접 확인. 좌표는 대표 지점이며 개별 벤치 위치와 외부인 접근 가능 여부는 미확인."
+  },
+  {
+    "name": "덕성여대 영근터 휴식 공간",
+    "lat": 37.65138662943542,
+    "lng": 127.01594671323257,
+    "address": "서울특별시 도봉구 삼양로144길 33",
+    "type": "campus_seating_area",
+    "rest_features": ["seating"],
+    "bench_count": null,
+    "verification": "field_observation",
+    "accessibility_verified": false,
+    "note": "영근터에서 의자가 다수 있음을 직접 확인. 정확한 의자 개수와 개별 위치, 외부인 접근 가능 여부는 미확인."
+  },
+  {
+    "name": "솔밭공원 휴식 공간",
+    "lat": 37.653009919076126,
+    "lng": 127.01229514535194,
+    "address": "서울특별시 강북구 삼양로 561",
+    "type": "park_seating_area",
+    "rest_features": ["bench", "seating"],
+    "bench_count": null,
+    "verification": "field_observation",
+    "accessibility_verified": false,
+    "note": "솔밭공원에 앉아서 쉴 수 있는 의자가 다수 있음을 직접 확인. 좌표는 선택한 대표 지점이며 실제 의자 개별 위치, 보행 접근성과 경로 우회거리는 미확인."
+  }
+]

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 선택 경로 상세</title>
+  <link rel="icon" type="image/svg+xml" href="/static/img/logo-leaf.svg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" data-leaflet-css>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous" defer></script>
+  <script src="/static/js/route-explanations.js" defer></script>
+  <script src="/static/js/script.js" defer></script>
+</head>
+<body data-page="route">
+  <header class="header">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+  <main class="route-detail">
+    <a href="/result.html" class="back-link">경로 다시 선택하기</a>
+    <h1 class="page-title">선택한 경로</h1>
+    <p id="trip-summary" class="route-summary"></p>
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <p id="map-warning" class="map-warning" role="status" aria-live="polite" hidden></p>
+    <section id="live-location-controls" class="live-location-controls" aria-label="현재 위치 표시" hidden>
+      <div class="live-location-buttons">
+        <button id="live-location-start" type="button" class="live-location-button">📍 내 위치 표시 시작</button>
+        <button id="live-location-stop" type="button" class="live-location-button" hidden>위치 표시 중지</button>
+        <button id="live-location-center" type="button" class="live-location-button" hidden>내 위치로 이동</button>
+      </div>
+      <p id="live-location-status" class="live-location-status" role="status" aria-live="polite">
+        버튼을 누르면 위치 권한을 요청해요. 위치 정보는 나란히 서버에 저장하지 않아요.
+      </p>
+    </section>
+    <figure class="route-map-box">
+      <div id="route-map" class="route-map route-map--leaflet" role="region"
+        aria-label="선택한 실제 경로 지도" aria-describedby="map-endpoint-note"></div>
+      <figcaption class="map-caption">실제 경로 좌표 · OpenStreetMap 배경지도 · 굵은 선이 선택한 경로예요.</figcaption>
+    </figure>
+      <section class="rest-spots-guide" aria-label="시연 지역 휴식 공간 후보">
+        <h2 class="rest-spots-guide-title">🪑 시연 지역 휴식 공간 후보</h2>
+
+        <p id="rest-spots-status"
+          class="rest-spots-status"
+          role="status"
+          aria-live="polite">
+          지도에서 벤치 아이콘을 누르면 시설 정보를 볼 수 있어요.
+        </p>
+
+        <p class="rest-spots-guide-note">
+          표시된 위치는 대표 좌표이며, 시설 이용 가능 여부와 실제 보행 접근성은 아직 확인되지 않았어요.
+        </p>
+      </section>
+
+    <p id="map-endpoint-note" class="data-note">출발·도착 마커는 경로의 시작·끝 보행 노드예요. 입력한 장소 좌표와 다를 수 있어요.</p>
+    <div id="route-detail"></div>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>선택한 경로가 없어요</h2>
+      <p>경로 비교 화면에서 확인할 경로를 선택해주세요.</p>
+      <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
+    </section>
+    <p id="selected-status" class="selection-status" role="status" aria-live="polite" hidden></p>
+    <button id="choose-route-button" type="button" class="btn-primary">이 경로 선택하기</button>
+    <p class="data-note">선택 완료는 이 화면에서만 안내해요. 서버에 선택 이력을 저장하지 않아요.</p>
+    <a href="/check.html" class="route-link">데이터 확인 안내 보기 <span aria-hidden="true">→</span></a>
+  </main>
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
+</body>
+</html>
