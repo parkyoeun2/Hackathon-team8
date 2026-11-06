@@ -1570,7 +1570,7 @@ body > noscript {
 }
 .slope-illust-title { font-size: 13px; font-weight: 700; color: var(--color-primary); }
 .slope-illust-graphic { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
-.slope-illust-walker { width: 24px; height: auto; flex-shrink: 0; }
+.slope-illust-walker { width: 48px; height: auto; flex-shrink: 0; align-self: center; margin-bottom: 20px; }
 /* 점선(일반 길)을 바탕으로 깔고 그 위에 실선(내 길)을 바닥 맞춰 겹침 */
 .slope-triangles { position: relative; flex: 1; min-width: 0; margin-top: 16px; }
 .slope-compare { display: block; width: 100%; height: auto; }
