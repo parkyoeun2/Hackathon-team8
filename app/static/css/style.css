@@ -1534,11 +1534,11 @@ a:focus-visible {
   margin-top: 6px;
 }
 
-.route-map:empty {
+.route-map:empty:not(.route-map--leaflet) {
   display: none;
 }
 
-.route-map svg {
+.route-map:not(.route-map--leaflet) svg {
   display: block;
   width: 100%;
   height: auto;
@@ -1559,6 +1559,100 @@ body > noscript {
   .page-title {
     font-size: 1.35rem;
   }
+}
+
+/* P6: 결과 미리보기는 SVG, 상세 화면만 Leaflet 지도입니다. */
+.route-preview-link {
+  display: block;
+  min-width: 0;
+  margin: 8px 0 16px;
+  border-radius: 14px;
+  color: var(--color-primary-active);
+  text-decoration: none;
+}
+.route-preview {
+  border-radius: 14px;
+}
+.route-map.route-preview svg {
+  max-height: 180px;
+}
+.preview-caption {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.route-map--leaflet {
+  display: block;
+  height: clamp(280px, 52vh, 420px);
+  min-width: 0;
+  max-width: 100%;
+  isolation: isolate;
+}
+.route-map--leaflet .leaflet-control-attribution {
+  max-width: 100%;
+  white-space: normal;
+  font-size: 11px;
+}
+.route-map--leaflet .leaflet-tooltip {
+  font-family: inherit;
+}
+.map-warning {
+  padding: 12px 14px;
+  margin: 10px 0 16px;
+  border-radius: 12px;
+  color: #92400e;
+  background: #fff4c4;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* P6: 결과 미리보기는 SVG, 상세 화면만 Leaflet 지도입니다. */
+.route-preview-link {
+  display: block;
+  min-width: 0;
+  margin: 8px 0 16px;
+  border-radius: 14px;
+  color: var(--color-primary-active);
+  text-decoration: none;
+}
+.route-preview {
+  border-radius: 14px;
+}
+.route-map.route-preview svg {
+  max-height: 180px;
+}
+.preview-caption {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.route-map--leaflet {
+  display: block;
+  height: clamp(280px, 52vh, 420px);
+  min-width: 0;
+  max-width: 100%;
+  isolation: isolate;
+}
+.route-map--leaflet .leaflet-control-attribution {
+  max-width: 100%;
+  white-space: normal;
+  font-size: 11px;
+}
+.route-map--leaflet .leaflet-tooltip {
+  font-family: inherit;
+}
+.map-warning {
+  padding: 12px 14px;
+  margin: 10px 0 16px;
+  border-radius: 12px;
+  color: #92400e;
+  background: #fff4c4;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 /* ===== 05 상세: 완만한 길 설명 그림 (연초록 상자) ===== */

@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나란히 - 선택 경로 상세</title>
-  <link rel="stylesheet" href="../static/css/style.css">
-  <script src="../static/js/script.js" defer></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" data-leaflet-css>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous" defer></script>
+  <script src="/static/js/script.js" defer></script>
 </head>
 <body data-page="route">
   <header class="header">
@@ -21,10 +25,13 @@
     <div id="global-warnings" class="result-warning" role="note" hidden></div>
     <p id="form-error" class="error-message" role="alert" hidden></p>
     <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <p id="map-warning" class="map-warning" role="status" aria-live="polite" hidden></p>
     <figure class="route-map-box">
-      <div id="route-map" class="route-map" role="img" aria-label="API가 반환한 실제 경로 좌표도"></div>
-      <figcaption class="map-caption">실제 경로 좌표도 · 배경지도 미포함</figcaption>
+      <div id="route-map" class="route-map route-map--leaflet" role="region"
+        aria-label="선택한 실제 경로 지도" aria-describedby="map-endpoint-note"></div>
+      <figcaption class="map-caption">실제 경로 좌표 · OpenStreetMap 배경지도 · 굵은 선이 선택한 경로예요.</figcaption>
     </figure>
+    <p id="map-endpoint-note" class="data-note">출발·도착 마커는 경로의 시작·끝 보행 노드예요. 입력한 장소 좌표와 다를 수 있어요.</p>
     <div id="route-detail"></div>
         <!-- 기울기 설명 그림 (연초록 상자) -->
     <figure class="slope-illust">
