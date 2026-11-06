@@ -322,6 +322,59 @@
     card.append(warnings);
   }
 
+  function appendRouteExplanations(card, route, trip) {
+    const build = window.NaranhiRouteExplanations?.buildRoutePresentation;
+    if (typeof build !== "function") return;
+    const presentation = build(route, trip.response.routes, trip);
+    const header = node("header", "route-card-header");
+    const heading = node("div", "route-heading");
+    heading.append(card.querySelector(".route-number"), card.querySelector(".route-label"));
+    header.append(heading, node("span", "route-type-badge", presentation.badge));
+    card.prepend(header);
+    const main = card.querySelector(".route-main");
+    header.after(main);
+    const section = node("section", "route-explanations");
+    section.dataset.routeId = route.id;
+    section.append(node("h3", "explanation-title visually-hidden", "경로 비교와 요청 조건"));
+    if (presentation.displayFacts.length) {
+      const facts = node("ul", "explanation-facts");
+      presentation.displayFacts.forEach((text) => facts.append(node("li", "", text)));
+      section.append(facts);
+    }
+    if (presentation.fallback) section.append(node("p", "explanation-fallback", presentation.reference
+      ? "비교 가능한 수치에 표시할 차이가 없어 기본 추천 이유를 함께 안내해요."
+      : "비교할 다른 경로가 없어 기본 추천 이유를 안내해요."));
+    section.append(node("p", "explanation-summary", presentation.summary));
+    if (presentation.slope) {
+      const slope = node("div", "explanation-slope");
+      slope.append(node("p", "slope-preference", presentation.slope.summary));
+      if (presentation.slope.caution) slope.append(node("p", "slope-caution", presentation.slope.caution));
+      section.append(slope);
+    }
+    const conditions = node("div", "explanation-conditions");
+    conditions.append(node("h4", "keyword-heading", "적용한 이동 조건"));
+    if (presentation.keywords.length) {
+      const keywords = node("ul", "condition-keywords");
+      keywords.setAttribute("aria-label", "이번 검색에 적용한 이동 조건");
+      presentation.keywords.forEach(({ key, label }) => {
+        const keyword = node("li", "condition-keyword", label);
+        keyword.dataset.condition = key;
+        keywords.append(keyword);
+      });
+      conditions.append(keywords);
+    } else conditions.append(node("p", "keyword-empty", "추가 조건 없음"));
+    section.append(conditions);
+    const data = node("div", "explanation-uncertainties");
+    data.append(node("h4", "", "데이터 안내"));
+    const notes = node("ul");
+    presentation.dataNotes.forEach((text) => notes.append(node("li", "", text)));
+    data.append(notes);
+    section.append(data);
+    main.after(section);
+    const preview = card.querySelector(".route-preview-link");
+    if (preview) header.after(preview);
+    card.querySelector(".route-reason").before(node("h3", "reason-heading", "기본 추천 이유"));
+  }
   function showEmpty(text) {
     ["routes-container", "route-detail", "route-map", "choose-route-button", "selected-status", "global-warnings", "same-route-message"].forEach((id) => {
       if (byId(id)) byId(id).hidden = true;
@@ -363,8 +416,21 @@
       const card = node("article", "route-card" + (index === 0 ? " is-recommended" : ""));
       card.dataset.routeId = route.id;
       card.setAttribute("role", "radio");
+      card.append(node("p", "route-number", `${index + 1}번 경로`));
       card.append(node("h2", "route-label", route.label));
+      const preview = node("a", "route-preview-link");
+      preview.href = `/route.html?routeId=${encodeURIComponent(route.id)}`;
+      preview.setAttribute("aria-label", `${route.label} 경로 미리보기, 실제 지도 보기`);
+      const diagram = node("div", "route-map route-preview");
+      diagram.setAttribute("aria-hidden", "true");
+      renderCoordinateMap(diagram, route.coordinates);
+      preview.append(diagram, node("span", "preview-caption", "실제 경로 미리보기 · 눌러서 지도 보기"));
+      preview.addEventListener("click", (event) => {
+        try { select(route.id); } catch (error) { event.preventDefault(); message("form-error", error.message); }
+      });
+      card.append(preview);
       appendMetrics(card, route);
+      appendRouteExplanations(card, route, trip);
       const link = node("a", "route-link", "이 경로 보기 →");
       link.href = `/route.html?routeId=${encodeURIComponent(route.id)}`;
       link.addEventListener("click", (event) => {
@@ -422,6 +488,59 @@
     container.replaceChildren(svg);
   }
 
+  // ZIP의 지도 코드에서 좌표 변환·경로선·끝점 마커만 선별했습니다.
+  // result/check는 SVG를 사용하며, Leaflet은 route에서만 초기화합니다.
+  function renderRouteMap(container, trip, selectedRoute) {
+    const leaflet = window.L;
+    const stylesheet = document.querySelector("link[data-leaflet-css]");
+    const unavailable = "지도를 불러오지 못했습니다. 연결을 확인하거나 경로 비교의 미리보기를 이용해 주세요. 아래 경로 정보는 계속 확인할 수 있습니다.";
+    if (!leaflet || leaflet.version !== "1.9.4" || !stylesheet?.sheet) {
+      container.hidden = true;
+      message("map-warning", unavailable);
+      return;
+    }
+    let map;
+    try {
+      container.hidden = false;
+      map = leaflet.map(container, { scrollWheelZoom: false });
+      const tiles = leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      });
+      tiles.on("tileerror", () => message("map-warning", "배경지도를 불러오지 못한 구간이 있습니다. 경로선과 아래 정보를 확인해 주세요."));
+      tiles.addTo(map);
+      const palette = ["#287c52", "#386ec2", "#a76a22"];
+      let selectedLine;
+      trip.response.routes.forEach((route, index) => {
+        const selected = route.id === selectedRoute.id;
+        // API [경도, 위도]를 Leaflet [위도, 경도]로 변환합니다.
+        const points = route.coordinates.map(([lng, lat]) => [lat, lng]);
+        const line = leaflet.polyline(points, {
+          color: palette[index], weight: selected ? 7 : 3,
+          opacity: selected ? 1 : 0.45, dashArray: selected ? null : "8 7",
+          className: "route-line" + (selected ? " route-line--selected" : ""),
+        }).addTo(map);
+        line.bindTooltip(node("span", "", route.label));
+        if (selected) selectedLine = line;
+      });
+      const points = selectedRoute.coordinates.map(([lng, lat]) => [lat, lng]);
+      [[points[0], "출발 · 보행 노드", "#287c52"],
+        [points[points.length - 1], "도착 · 보행 노드", "#ad3d57"]].forEach(([point, label, color]) => {
+        leaflet.circleMarker(point, { radius: 8, color: "#ffffff", weight: 2,
+          fillColor: color, fillOpacity: 1 }).addTo(map)
+          .bindTooltip(node("span", "", label), { permanent: true, direction: "top", offset: [0, -8] });
+      });
+      map.fitBounds(leaflet.latLngBounds(points), { padding: [32, 32], maxZoom: 18 });
+      selectedLine.bringToFront();
+      window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    } catch (_) {
+      if (map) map.remove();
+      container.replaceChildren();
+      container.hidden = true;
+      message("map-warning", unavailable);
+    }
+  }
+
   function initDetail(page) {
     const trip = readTrip();
     if (!trip) return showEmpty("표시할 경로가 없습니다. 홈에서 경로를 다시 요청해 주세요.");
@@ -433,15 +552,18 @@
     writeStorage("sessionStorage", TRIP_KEY, trip);
     renderSummary(trip);
     const card = node("article", "route-card");
+    if (page === "route") card.append(node("p", "route-number", `${trip.response.routes.findIndex((item) => item.id === route.id) + 1}번 경로`));
     card.append(node("h2", "route-label", route.label));
     appendMetrics(card, route);
     if (page === "route") {
+      appendRouteExplanations(card, route, trip);
       const checkLink = node("a", "route-link", "정보 미확인·주의사항 확인 →");
       checkLink.href = `/check.html?routeId=${encodeURIComponent(route.id)}`;
       card.append(checkLink);
     }
     byId("route-detail").replaceChildren(card);
-    renderCoordinateMap(byId("route-map"), route.coordinates);
+    if (page === "route") renderRouteMap(byId("route-map"), trip, route);
+    else renderCoordinateMap(byId("route-map"), route.coordinates);
     const choose = byId("choose-route-button");
     if (choose) choose.addEventListener("click", () => {
       try {

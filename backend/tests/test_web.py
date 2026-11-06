@@ -1,6 +1,7 @@
 """FastAPI 단일 서버의 HTML·정적 파일·실제 API 연동 HTTP 검증."""
 
 from html.parser import HTMLParser
+from itertools import permutations
 import json
 from pathlib import Path
 import socket
@@ -21,11 +22,28 @@ import route_service_v02 as route_service  # noqa: E402
 import uvicorn  # noqa: E402
 
 
+LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+LEAFLET_CSS_INTEGRITY = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+LEAFLET_JS_INTEGRITY = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+
+
+EXPECTED_DEMO_PLACES = [
+    {"id": "duksung_gate", "name": "덕성여대 정문", "lat": 37.6517, "lng": 127.0149},
+    {"id": "hyomun_gate", "name": "효문중고 출입구", "lat": 37.6526, "lng": 127.0174},
+    {"id": "duksung_dorm", "name": "덕성여대 기숙사",
+     "lat": 37.6491330337407, "lng": 127.022277801401},
+    {"id": "april19_station_exit1", "name": "4·19민주묘지역 1번 출구",
+     "lat": 37.649707, "lng": 127.013733},
+]
+
+
 class PageElements(HTMLParser):
     def __init__(self):
         super().__init__()
         self.body_page = None
         self.scripts = []
+        self.stylesheets = []
         self.resources = []
         self.links = []
 
@@ -37,7 +55,10 @@ class PageElements(HTMLParser):
             self.scripts.append(attrs)
         if tag in ("script", "img") and attrs.get("src"):
             self.resources.append(attrs["src"])
-        if tag == "link" and attrs.get("href", "").startswith("/static/"):
+        if tag == "link" and attrs.get("rel") == "stylesheet":
+            self.stylesheets.append(attrs)
+            self.resources.append(attrs.get("href", ""))
+        elif tag == "link" and attrs.get("href", "").startswith("/static/"):
             self.resources.append(attrs["href"])
         if tag == "a" and attrs.get("href"):
             self.links.append(attrs["href"])
@@ -124,15 +145,42 @@ class WebServerTests(unittest.TestCase):
                 parser = PageElements()
                 parser.feed(body.decode("utf-8"))
                 self.assertEqual(parser.body_page, page)
-                self.assertEqual(len(parser.scripts), 1)
-                self.assertEqual(parser.scripts[0].get("src"), "/static/js/script.js")
-                self.assertIn("defer", parser.scripts[0])
+                expected_scripts = ["/static/js/script.js"]
+                expected_stylesheets = ["/static/css/style.css"]
+                approved_external = set()
+                if page in ("result", "route"):
+                    expected_scripts.insert(0, "/static/js/route-explanations.js")
+                if page == "route":
+                    expected_scripts.insert(0, LEAFLET_JS)
+                    expected_stylesheets.insert(0, LEAFLET_CSS)
+                    approved_external = {LEAFLET_CSS, LEAFLET_JS}
+                self.assertEqual(
+                    [script.get("src") for script in parser.scripts], expected_scripts,
+                )
+                self.assertEqual(
+                    [style.get("href") for style in parser.stylesheets],
+                    expected_stylesheets,
+                )
+                for script in parser.scripts:
+                    self.assertIn("defer", script)
+                    self.assertNotIn("async", script)
+                if page == "route":
+                    for asset, integrity in (
+                        (parser.stylesheets[0], LEAFLET_CSS_INTEGRITY),
+                        (parser.scripts[0], LEAFLET_JS_INTEGRITY),
+                    ):
+                        self.assertEqual(asset.get("integrity"), integrity)
+                        self.assertEqual(asset.get("crossorigin"), "anonymous")
                 for resource in parser.resources:
-                    self.assertTrue(resource.startswith("/static/"), resource)
+                    if resource.startswith("/static/"):
+                        resources.add(resource)
+                    else:
+                        self.assertIn(resource, approved_external)
                 for link in parser.links:
                     if not link.startswith("#"):
                         self.assertTrue(link.startswith("/"), link)
-                resources.update(parser.resources)
+                # CDN assets are pinned above. HTTP checks remain local and
+                # deterministic; real loading is covered by browser tests.
         for resource in resources:
             with self.subTest(resource=resource):
                 status, _, _ = self.request(resource)
@@ -148,20 +196,72 @@ class WebServerTests(unittest.TestCase):
                     self.assertNotIn(stale, html)
                 self.assertNotIn("jquery", html.lower())
 
-    def test_demo_coordinates_are_the_verified_two_locations(self):
+    def test_demo_coordinates_are_the_four_locations(self):
         status, headers, body = self.request("/static/data/demo-places.json")
         self.assertEqual(status, 200)
         self.assertEqual(headers.get_content_type(), "application/json")
         places = json.loads(body)
-        if isinstance(places, dict):
-            places = places.get("places", places)
-        if isinstance(places, dict):
-            places = list(places.values())
-        self.assertEqual(len(places), 2)
-        self.assertEqual(
-            {(place["lat"], place["lng"]) for place in places},
-            {(37.6517, 127.0149), (37.6526, 127.0174)},
+        # Keep the existing two IDs/order, exact names and supplied precision.
+        # The station exit must not be relabeled as the cemetery entrance.
+        self.assertEqual(places, EXPECTED_DEMO_PLACES)
+
+    def test_all_demo_place_directions_and_conditions_match_real_routes(self):
+        status, _, body = self.request("/static/data/demo-places.json")
+        self.assertEqual(status, 200)
+        places = json.loads(body)
+        self.assertEqual(places, EXPECTED_DEMO_PLACES)
+        conditions = (
+            ("normal", None),
+            ("suitcase", {"suitcase": True}),
+            ("stroller", {"stroller": True}),
         )
+        cases = 0
+        new_pair_cases = 0
+        for start, end in permutations(places, 2):
+            for condition, today in conditions:
+                cases += 1
+                with self.subTest(
+                    start=start["id"], end=end["id"], condition=condition,
+                ):
+                    payload = {
+                        "start": {key: start[key] for key in ("lat", "lng")},
+                        "end": {key: end[key] for key in ("lat", "lng")},
+                        "profile": {"stairs": "allowed"},
+                    }
+                    if today is not None:
+                        payload["today"] = today.copy()
+                    expected = route_service.recommend_routes(payload)
+                    status, headers, body = self.request("/api/routes", "POST", payload)
+                    self.assertEqual(status, 200)
+                    self.assertEqual(headers.get_content_type(), "application/json")
+                    actual = json.loads(body)
+                    self.assertEqual(
+                        {key: value for key, value in actual.items() if key != "requestId"},
+                        {key: value for key, value in expected.items() if key != "requestId"},
+                    )
+                    self.assertGreaterEqual(len(actual["routes"]), 1)
+                    self.assertLessEqual(len(actual["routes"]), 3)
+                    self.assertIsInstance(actual["sameRoute"], bool)
+                    if condition == "stroller":
+                        self.assertTrue(
+                            all(route["stairsCount"] == 0 for route in actual["routes"])
+                        )
+                    if {start["id"], end["id"]} == {
+                        "duksung_dorm", "april19_station_exit1",
+                    }:
+                        new_pair_cases += 1
+                        primary = actual["routes"][0]
+                        # A's verified representative route is the same for
+                        # these six cases. Do not assume symmetry for all pairs.
+                        self.assertEqual(primary["distanceM"], 1121.3)
+                        self.assertEqual(len(primary["coordinates"]), 53)
+                        self.assertEqual(primary["stairsCount"], 0)
+                        self.assertEqual(primary["gradeCoveragePercent"], 19.7)
+                        self.assertIs(actual["sameRoute"], True)
+                        for field in ("ascentM", "maxSlopePercent", "crosswalkCount"):
+                            self.assertIsNone(primary[field])
+        self.assertEqual(cases, 36)
+        self.assertEqual(new_pair_cases, 6)
 
     def test_unknown_pages_and_traversal_do_not_expose_backend_files(self):
         for path in (

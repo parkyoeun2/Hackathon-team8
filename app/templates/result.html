@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나란히 - 경로 비교 결과</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/route-explanations.js" defer></script>
   <script src="/static/js/script.js" defer></script>
 </head>
 <body data-page="result">
@@ -15,23 +16,24 @@
     </a>
   </header>
   <main class="result">
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>표시할 경로가 없어요</h2>
+      <p>출발지와 목적지를 선택해 경로를 다시 찾아주세요.</p>
+      <a href="/home.html" class="btn-primary">경로 찾기로 돌아가기</a>
+    </section>
+    <a href="/home.html" class="back-link">출발지·목적지 다시 선택하기</a>
     <section class="result-intro">
       <h1>추천 경로 비교</h1>
       <p id="trip-summary" class="route-summary"></p>
       <p class="applied-conditions">이동 프로필과 승인한 오늘 상태를 반영한 경로예요.</p>
+      <p class="data-note">각 경로의 SVG 미리보기를 누르면 실제 지도에서 확인할 수 있어요.</p>
     </section>
     <p id="same-route-message" class="status-message" role="status" hidden></p>
     <div id="global-warnings" class="result-warning" role="note" hidden></div>
     <p id="form-error" class="error-message" role="alert" hidden></p>
     <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
     <div id="routes-container" class="route-list" role="radiogroup" aria-label="추천 경로 선택"></div>
-    <section id="empty-state" class="empty-state" hidden>
-      <h2>표시할 경로가 없어요</h2>
-      <p>출발지와 목적지를 선택해 경로를 다시 찾아주세요.</p>
-      <a href="/home.html" class="btn-primary">경로 찾기로 돌아가기</a>
-    </section>
     <p class="data-note">정보 미확인은 0과 달라요. 경로별 경고와 확인 가능한 지표를 함께 살펴보세요.</p>
-    <a href="/home.html" class="back-link">출발지·목적지 다시 선택하기</a>
   </main>
   <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>

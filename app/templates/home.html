@@ -26,17 +26,18 @@
     <form id="route-form" class="route-form">
       <div class="input-box">
         <label for="start">출발지</label>
-        <select id="start" name="start" required aria-describedby="demo-place-note">
+        <select id="start" name="start" required aria-describedby="demo-place-note snap-distance-note">
           <option value="">출발지를 선택해주세요</option>
         </select>
       </div>
       <div class="input-box">
         <label for="end">목적지</label>
-        <select id="end" name="end" required aria-describedby="demo-place-note">
+        <select id="end" name="end" required aria-describedby="demo-place-note snap-distance-note">
           <option value="">목적지를 선택해주세요</option>
         </select>
       </div>
-      <p id="demo-place-note" class="data-note">현재는 검증된 두 시연 장소 사이의 경로를 안내해요.</p>
+      <p id="demo-place-note" class="data-note">시연 장소 네 곳을 선택할 수 있어요. 4·19민주묘지역 1번 출구는 민주묘지 입구와 다른 장소예요.</p>
+      <p id="snap-distance-note" class="data-note">입력 지점과 보행 노드 사이의 실제 이동 동선·거리는 검증되지 않았어요.</p>
       <section class="today" aria-labelledby="today-title">
         <h2 id="today-title">오늘 이동에 특별한 상황이 있나요?</h2>
         <p class="today-desc">필요한 날에만 한마디 더해주세요.</p>
