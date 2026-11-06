@@ -5,7 +5,7 @@ const path = require('node:path');
 const { chromium } = require(process.env.NARANHI_PLAYWRIGHT_MODULE || 'playwright');
 
 const base = process.env.NARANHI_TEST_URL || 'http://127.0.0.1:8001';
-const artifacts = path.resolve(process.env.NARANHI_TEST_ARTIFACTS || '.p5-artifacts/p7-demo-places');
+const artifacts = path.resolve(process.env.NARANHI_TEST_ARTIFACTS || '.p5-artifacts/p8-readability');
 const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 const TILE_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -17,6 +17,8 @@ const profile = { stairs: 'avoid', detourAllowed: true, gentleSlope: true,
   crosswalks: 'allowed', comfortFirst: true };
 const completed = [];
 const p7Cases = [];
+const p8Examples = [];
+const readabilityExamples = [];
 const errors = [];
 const externalRequests = [];
 const requests = [];
@@ -46,7 +48,7 @@ function externalAllowed(url) {
 }
 
 async function observedContext(browser, label, options = {}) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: options.hasTouch === true });
   contexts.add(context);
   context.setDefaultTimeout(15000);
   context.on('page', page => page.on('pageerror', error => errors.push({ case: label, message: error.message })));
@@ -102,11 +104,11 @@ async function closeContext(context) {
   await context.close();
 }
 
-async function preparedHome(browser, label) {
-  const context = await observedContext(browser, label);
+async function preparedHome(browser, label, savedProfile = profile, options = {}) {
+  const context = await observedContext(browser, label, options);
   await context.addInitScript(({ key, value, expectedOrigin }) => {
     if (location.origin === expectedOrigin) localStorage.setItem(key, JSON.stringify(value));
-  }, { key: PROFILE, value: profile, expectedOrigin: new URL(base).origin });
+  }, { key: PROFILE, value: savedProfile, expectedOrigin: new URL(base).origin });
   const page = await context.newPage();
   await page.goto(base + '/home.html');
   await selectPlaces(page);
@@ -115,6 +117,166 @@ async function preparedHome(browser, label) {
 
 async function waitForRoute(page, id) {
   await page.waitForURL(url => url.pathname === '/route.html' && url.searchParams.get('routeId') === id);
+}
+
+function expectedKeywordKeys(trip) {
+  const today = trip.approvedToday || {}, preferences = trip.profile || {};
+  const keys = ['suitcase', 'stroller', 'injuredLeg', 'tired'].filter(key => today[key] === true);
+  if (preferences.stairs === 'blocked' || preferences.stairs === 'avoid' || today.avoidStairs === true) keys.push('stairs');
+  if (preferences.gentleSlope === true) keys.push('gentleSlope');
+  if (preferences.crosswalks === 'avoid') keys.push('crosswalks');
+  if (preferences.comfortFirst === true) keys.push('comfortFirst');
+  if (preferences.detourAllowed === true || today.allowDetour === true) keys.push('allowDetour');
+  return keys;
+}
+
+async function assertReadableCard(card, route) {
+  const box = card.locator('.route-explanations');
+  const trip = await card.evaluate(() => JSON.parse(sessionStorage.getItem('naranhi.trip.v1')));
+  const expectedKeys = expectedKeywordKeys(trip);
+  const keywordContainer = box.locator('.explanation-conditions');
+  const actualKeys = await keywordContainer.locator('.condition-keyword').evaluateAll(chips =>
+    chips.map(chip => chip.dataset.condition));
+  assert.deepEqual([...actualKeys].sort(), [...expectedKeys].sort(), 'only active approved/requested conditions become chips');
+  assert.equal(new Set(actualKeys).size, actualKeys.length, 'no duplicate merged condition chips');
+  assert.equal(await keywordContainer.locator('.condition-keywords').count(), expectedKeys.length ? 1 : 0);
+  assert.equal(await keywordContainer.locator('.keyword-empty').count(), expectedKeys.length ? 0 : 1);
+  assert.equal(await keywordContainer.locator('li.condition-keyword').count(), expectedKeys.length);
+  assert.ok((await keywordContainer.locator('.condition-keyword').allTextContents())
+    .every(text => text.trim().length > 0 && !text.includes('검색했어요')), 'keywords replace the long condition sentence list');
+
+  const badge = card.locator('.route-card-header .route-type-badge');
+  assert.equal(await badge.count(), 1);
+  assert.equal(await badge.innerText(), expectedKeys.length ? '이동 조건 검색' : '기본 조건 검색');
+  assert.ok(!/더 편|안전|무장애/.test(await badge.innerText()));
+  assert.equal(await card.locator('.route-card-header .route-label').innerText(), route.label);
+  assert.equal(await card.locator('.route-main').count(), 1);
+  assert.equal(await card.locator('[data-field="distanceM"]').count(), 1);
+  assert.equal(await card.locator('[data-field="gradeCoveragePercent"]').count(), 1);
+  assert.ok((await box.locator('.explanation-summary').innerText()).trim().length > 0);
+
+  const selectedGentle = trip.profile.gentleSlope === true;
+  assert.equal(await box.locator('.slope-preference').count(), selectedGentle ? 1 : 0);
+  if (selectedGentle) {
+    assert.equal(await box.locator('.slope-preference').innerText(), '급경사 회피 선호를 반영했어요.');
+    if (route.gradeCoveragePercent < 100 || route.maxSlopePercent === null || route.ascentM === null) {
+      assert.equal(await box.locator('.slope-caution').innerText(), '실제로 더 완만한지는 확인되지 않았어요.');
+    }
+  } else {
+    assert.equal(await box.locator('.slope-caution').count(), 0);
+    assert.ok(!actualKeys.includes('gentleSlope'));
+  }
+
+  const dataText = await box.locator('.explanation-uncertainties').innerText();
+  const percentageValues = [...dataText.matchAll(/(\d+(?:\.\d+)?)%/g)].map(match => Number(match[1]));
+  assert.deepEqual(percentageValues, [route.gradeCoveragePercent], 'data guidance uses this route coverage only');
+  assert.ok(dataText.includes('90m DEM'));
+  if (route.gradeCoveragePercent < 100) assert.ok(/미확인|확인되지 않은/.test(dataText));
+
+  const layout = await card.evaluate(element => {
+    const find = selector => element.querySelector(selector);
+    const before = (first, second) => Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const header = find('.route-card-header'), distance = find('.route-main'), box = find('.route-explanations');
+    const facts = find('.explanation-facts'), summary = find('.explanation-summary');
+    const slope = find('.explanation-slope'), keywords = find('.explanation-conditions');
+    const data = find('.explanation-uncertainties'), preview = find('.route-preview-link');
+    const previewSvg = preview?.querySelector('svg'), caption = preview?.querySelector('.preview-caption');
+    const caution = find('.slope-caution'), preference = find('.slope-preference');
+    const cautionStyle = caution ? getComputedStyle(caution) : null;
+    const chips = [...element.querySelectorAll('.condition-keyword')];
+    const rows = [];
+    for (const chip of chips) {
+      const rectangle = chip.getBoundingClientRect();
+      const row = rows.find(item => Math.abs(item.top - rectangle.top) < 1);
+      if (row) row.count++;
+      else rows.push({ top: rectangle.top, count: 1 });
+    }
+    return {
+      headerDistance: before(header, distance), distanceExplanation: before(distance, box),
+      isResult: Boolean(element.closest('#routes-container')),
+      previewCount: element.querySelectorAll('.route-preview-link').length,
+      previewSvgCount: preview?.querySelectorAll('svg').length || 0,
+      headerPreviewDistance: !preview || before(header, preview) && before(preview, distance)
+        && header.nextElementSibling === preview && preview.nextElementSibling === distance,
+      previewCaptionOrder: !preview || Boolean(previewSvg && caption && before(previewSvg, caption)),
+      previewBounds: !preview || header.getBoundingClientRect().bottom <= preview.getBoundingClientRect().top + 1
+        && preview.getBoundingClientRect().bottom <= distance.getBoundingClientRect().top + 1,
+      captionBounds: !preview || Boolean(previewSvg && caption
+        && previewSvg.getBoundingClientRect().bottom <= caption.getBoundingClientRect().top + 1),
+      factsSummary: before(facts, summary), summaryKeywords: before(summary, keywords),
+      slopeOrder: !slope || before(summary, slope) && before(slope, keywords),
+      keywordsData: before(keywords, data),
+      cardOverflow: element.scrollWidth > element.clientWidth + 1,
+      keywordsOverflow: keywords.scrollWidth > keywords.clientWidth + 1,
+      chipRows: rows.map(row => row.count),
+      distanceSize: parseFloat(getComputedStyle(find('.route-distance')).fontSize),
+      factSize: parseFloat(getComputedStyle(facts.querySelector('li')).fontSize),
+      headingLeft: find('.route-card-header .route-heading').getBoundingClientRect().left,
+      badgeLeft: find('.route-type-badge').getBoundingClientRect().left,
+      cautionStyle: cautionStyle ? {
+        background: cautionStyle.backgroundColor, color: cautionStyle.color,
+        padding: ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'].map(key => parseFloat(cautionStyle[key])),
+        radius: ['borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius']
+          .map(key => parseFloat(cautionStyle[key])),
+        fontSize: parseFloat(cautionStyle.fontSize),
+        preferenceSize: parseFloat(getComputedStyle(preference).fontSize),
+      } : null,
+    };
+  });
+  for (const name of ['headerDistance', 'headerPreviewDistance', 'previewCaptionOrder', 'previewBounds', 'captionBounds',
+    'distanceExplanation', 'factsSummary', 'summaryKeywords', 'slopeOrder', 'keywordsData'])
+    assert.equal(layout[name], true, 'readable information order: ' + name);
+  assert.equal(layout.previewCount, layout.isResult ? 1 : 0, 'result has one preview link, detail has none');
+  assert.equal(layout.previewSvgCount, layout.isResult ? 1 : 0, 'one existing SVG per result preview');
+  if (layout.cautionStyle) {
+    assert.ok(['rgba(0, 0, 0, 0)', 'transparent'].includes(layout.cautionStyle.background), 'slope note has no colored background');
+    assert.deepEqual(layout.cautionStyle.padding, [0, 0, 0, 0], 'slope note is plain supporting text without box padding');
+    assert.deepEqual(layout.cautionStyle.radius, [0, 0, 0, 0], 'slope note has no box corners');
+    assert.equal(layout.cautionStyle.color, 'rgb(82, 97, 88)', 'slope note uses the calm gray text color');
+    assert.equal(layout.cautionStyle.fontSize, 15, 'slope note remains readable at 15px');
+    assert.ok(layout.cautionStyle.fontSize < layout.cautionStyle.preferenceSize, 'slope note is smaller than its preference statement');
+  }
+  assert.equal(layout.cardOverflow, false);
+  assert.equal(layout.keywordsOverflow, false);
+  assert.ok(layout.chipRows.every(count => count <= 2), 'mobile badges contain at most two keywords per row');
+  assert.ok(layout.distanceSize >= 32, 'total distance has a large font');
+  assert.ok(layout.factSize >= 18, 'main comparison has a readable font');
+  assert.ok(layout.badgeLeft > layout.headingLeft, 'search type badge is to the right of the route name');
+  return { keys: actualKeys, badge: await badge.innerText(), dataText };
+}
+
+async function explanationSnapshot(card, route) {
+  const box = card.locator('.route-explanations');
+  await box.waitFor({ state: 'visible' });
+  assert.equal(await box.count(), 1);
+  assert.equal(await box.getAttribute('data-route-id'), route.id);
+  assert.equal(await box.locator('h3').innerText(), '경로 비교와 요청 조건');
+  assert.equal(await card.locator('p.route-reason').innerText(), route.reason,
+    'original API reason remains unchanged');
+  const facts = await box.locator('.explanation-facts').innerText();
+  for (const [field, expression] of [
+    ['ascentM', /누적\s*상승/],
+    ['maxSlopePercent', /최대\s*경사/],
+    ['crosswalkCount', /횡단/],
+  ]) {
+    if (route[field] === null) assert.ok(!expression.test(facts),
+      field + ': unknown metric never becomes a numeric comparison');
+  }
+  assert.ok(!/완만/.test(facts), 'numeric facts do not claim overall gentleness');
+  if (route.gradeCoveragePercent < 100) {
+    const uncertainty = await box.locator('.explanation-uncertainties').innerText();
+    assert.ok(uncertainty.includes('경사') && uncertainty.includes('확인'));
+  }
+  await assertReadableCard(card, route);
+  return (await box.innerText()).trim();
+}
+
+async function assertDetailExplanation(page, route, expected, originalResponse) {
+  const detail = page.locator('#route-detail .route-card');
+  assert.equal(await explanationSnapshot(detail, route), expected,
+    'detail explanation belongs to the selected actual route');
+  const stored = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).response, TRIP);
+  assert.deepEqual(stored, originalResponse, 'display explanations do not mutate the stored API response');
 }
 
 async function assertLeafletRoute(page, response, chosen) {
@@ -188,7 +350,7 @@ async function assertLeafletRoute(page, response, chosen) {
   let result, chosen, routeStatus, backgroundTilesVisible = false;
   function report(status, error) {
     const mainTiles = networkResponses.filter(item => item.case === 'main' && TILE_URL.test(item.url));
-    return { status, passed: completed.length, checks: completed, p7Cases,
+    return { status, passed: completed.length, checks: completed, p7Cases, p8Examples, readabilityExamples,
       routeApi: result ? { status: routeStatus, count: result.routes.length, sameRoute: result.sameRoute,
         routes: result.routes.map(({ id, label, distanceM, ascentM, maxSlopePercent,
           gradeCoveragePercent, stairsCount, crosswalkCount, coordinates }) => ({
@@ -247,6 +409,13 @@ async function assertLeafletRoute(page, response, chosen) {
     // release a fetch response body on navigation; backend tests compare it to A.
     const actualTrip = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), TRIP);
     result = actualTrip.response;
+    const verifyResponse = await context.request.post(base + '/api/routes', { data: submitted });
+    assert.equal(verifyResponse.status(), 200);
+    const verifiedApiResponse = await verifyResponse.json();
+    const withoutRequestId = ({ requestId, ...body }) => body;
+    assert.deepEqual(withoutRequestId(result), withoutRequestId(verifiedApiResponse),
+      'stored response keeps the original API contract and values');
+    const explanationById = new Map();
     const cards = page.locator('.route-card');
     assert.equal(await cards.count(), result.routes.length);
     assert.ok(result.routes.length >= 1 && result.routes.length <= 3);
@@ -258,6 +427,10 @@ async function assertLeafletRoute(page, response, chosen) {
       assert.equal(await card.getAttribute('data-route-id'), item.id);
       const text = await card.innerText();
       assert.ok(text.includes(item.label));
+      const explanation = await explanationSnapshot(card, item);
+      explanationById.set(item.id, explanation);
+      assert.match(await card.locator('.route-number').innerText(), /^\d+번\s*경로$/);
+      p8Examples.push({ routeId: item.id, label: item.label, explanation, originalReason: item.reason });
       for (const field of ['ascentM', 'maxSlopePercent', 'crosswalkCount']) {
         const metric = await card.locator('[data-field="' + field + '"]').innerText();
         if (item[field] === null) assert.ok(metric.includes('정보 미확인'), field);
@@ -273,10 +446,20 @@ async function assertLeafletRoute(page, response, chosen) {
       assert.equal(points.length, item.coordinates.length);
       assert.ok(points.every(point => point.split(',').every(value => Number.isFinite(Number(value)))));
     }
+    const firstFacts = await cards.nth(0).locator('.explanation-facts').innerText();
+    const expectedDistanceDifference = Number(Math.abs(result.routes[1].distanceM - result.routes[0].distanceM).toFixed(1));
+    assert.ok(firstFacts.includes(expectedDistanceDifference.toLocaleString('ko-KR') + 'm'));
+    assert.ok(firstFacts.includes('2번'), 'comparison names the actual numbered reference route');
+    assert.ok((await cards.nth(0).locator('.explanation-conditions').innerText()).includes('캐리어'));
+    assert.ok(!(await cards.nth(0).locator('.explanation-conditions').innerText()).includes('유모차'));
     for (const warning of result.warnings)
       assert.ok((await page.locator('#global-warnings').innerText()).includes(warning));
     assert.ok(!/\d+\s*분/.test(await page.locator('body').innerText()));
     assert.ok(!(await page.locator('body').innerText()).includes('가장 빠른 길'));
+    await page.setViewportSize({ width: 320, height: 844 });
+    await assertReadableCard(cards.nth(0), result.routes[0]);
+    await shot(page, '04-results-mobile-320');
+    await page.setViewportSize({ width: 390, height: 844 });
     await shot(page, '04-results-mobile');
     const storedTrip = await page.evaluate(key => sessionStorage.getItem(key), TRIP);
     assert.ok(!storedTrip.includes(rawText));
@@ -284,6 +467,7 @@ async function assertLeafletRoute(page, response, chosen) {
     await page.locator('.route-card[data-route-id="' + chosen.id + '"] .route-preview-link').click();
     await waitForRoute(page, chosen.id);
     await assertLeafletRoute(page, result, chosen);
+    await assertDetailExplanation(page, chosen, explanationById.get(chosen.id), result);
     try {
       await page.waitForFunction(() => Array.from(document.querySelectorAll('#route-map img.leaflet-tile'))
         .some(tile => tile.complete && tile.naturalWidth > 0), null, { timeout: 10000 });
@@ -297,6 +481,10 @@ async function assertLeafletRoute(page, response, chosen) {
     await page.click('#choose-route-button');
     assert.ok((await page.locator('#selected-status').innerText()).length > 0);
     assert.equal(requests.filter(r => r.url.includes('route-selections')).length, 0);
+    await page.setViewportSize({ width: 320, height: 844 });
+    await assertReadableCard(page.locator('#route-detail .route-card'), chosen);
+    await shot(page, '05-detail-mobile-320');
+    await page.setViewportSize({ width: 390, height: 844 });
     await shot(page, '05-detail-mobile');
     completed.push('approved partial today only, real routes, labels, nulls, coverage, warnings, SVG previews and Leaflet geometry');
 
@@ -308,6 +496,7 @@ async function assertLeafletRoute(page, response, chosen) {
     await keyboardPreview.press('Enter');
     await waitForRoute(page, keyboardRoute.id);
     await assertLeafletRoute(page, result, keyboardRoute);
+    await assertDetailExplanation(page, keyboardRoute, explanationById.get(keyboardRoute.id), result);
     assert.equal(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).selectedRouteId, TRIP), keyboardRoute.id);
     await page.locator('a.back-link[href="/result.html"]').click();
     await page.waitForURL('**/result.html');
@@ -315,6 +504,7 @@ async function assertLeafletRoute(page, response, chosen) {
     await page.locator('.route-card[data-route-id="' + linkedRoute.id + '"] .route-link:not(.route-preview-link)').click();
     await waitForRoute(page, linkedRoute.id);
     await assertLeafletRoute(page, result, linkedRoute);
+    await assertDetailExplanation(page, linkedRoute, explanationById.get(linkedRoute.id), result);
     completed.push('pointer SVG preview, keyboard Enter, and route text link retain exact route id');
 
     await page.goto(base + '/check.html?routeId=' + encodeURIComponent(chosen.id));
@@ -476,6 +666,7 @@ async function assertLeafletRoute(page, response, chosen) {
         const responseP7 = savedTripP7.response;
         assert.ok(responseP7.routes.length >= 1 && responseP7.routes.length <= 3);
         const p7Cards = p7.page.locator('.route-card');
+        const p7ExplanationById = new Map();
         assert.equal(await p7Cards.count(), responseP7.routes.length);
         const summaryP7 = await p7.page.locator('#trip-summary').innerText();
         assert.ok(summaryP7.includes(direction.start.name) && summaryP7.includes(direction.end.name));
@@ -486,6 +677,7 @@ async function assertLeafletRoute(page, response, chosen) {
           assert.equal(await card.getAttribute('data-route-id'), route.id);
           const cardText = await card.innerText();
           assert.ok(cardText.includes(route.label));
+          p7ExplanationById.set(route.id, await explanationSnapshot(card, route));
           for (const field of ['ascentM', 'maxSlopePercent', 'crosswalkCount']) {
             const text = await card.locator('[data-field="' + field + '"]').innerText();
             if (route[field] === null) assert.ok(text.includes('정보 미확인'));
@@ -503,6 +695,7 @@ async function assertLeafletRoute(page, response, chosen) {
         await p7.page.locator('.route-card[data-route-id="' + routeP7.id + '"] .route-preview-link').click();
         await waitForRoute(p7.page, routeP7.id);
         await assertLeafletRoute(p7.page, responseP7, routeP7);
+        await assertDetailExplanation(p7.page, routeP7, p7ExplanationById.get(routeP7.id), responseP7);
         assert.ok((await p7.page.locator('#trip-summary').innerText()).includes(station.name));
         assert.ok((await p7.page.locator('#route-detail').innerText()).includes(routeP7.label));
         let newPlaceBackgroundVisible = null;
@@ -531,6 +724,79 @@ async function assertLeafletRoute(page, response, chosen) {
     }
     await closeContext(p7.context);
 
+    // P8 finishing cases use real requests with explicit profiles. The custom
+    // seed survives navigation instead of restoring the default true preference.
+    const readabilityCases = [
+      { id: 'slope-unselected', hasTouch: true, savedProfile: { ...profile, gentleSlope: false, crosswalks: 'avoid' } },
+      { id: 'basic-conditions', savedProfile: { stairs: 'allowed', detourAllowed: false, gentleSlope: false,
+        crosswalks: 'allowed', comfortFirst: false } },
+    ];
+    for (const sample of readabilityCases) {
+      const readability = await preparedHome(browser, 'p8-' + sample.id, sample.savedProfile, { hasTouch: sample.hasTouch === true });
+      const offset = requests.length;
+      const [actualResponse] = await Promise.all([
+        apiResponse(readability.page, '/api/routes'), readability.page.click('#search-button'),
+      ]);
+      assert.equal(actualResponse.status(), 200);
+      const request = requests.slice(offset).find(item => item.url.endsWith('/api/routes'));
+      assert.deepEqual(request.body.profile, sample.savedProfile);
+      assert.equal(Object.prototype.hasOwnProperty.call(request.body, 'today'), false);
+      await readability.page.waitForURL('**/result.html');
+      const trip = await readability.page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), TRIP);
+      assert.deepEqual(trip.profile, sample.savedProfile);
+      const route = trip.response.routes[0];
+      const card = readability.page.locator('.route-card').nth(0);
+      const snapshot = await explanationSnapshot(card, route);
+      const summary = await assertReadableCard(card, route);
+      assert.equal(await card.locator('.slope-preference').count(), 0);
+      assert.equal(await card.locator('.slope-caution').count(), 0);
+      assert.ok(!summary.keys.includes('gentleSlope'));
+      if (sample.id === 'basic-conditions') assert.deepEqual(summary.keys, []);
+      await shot(readability.page, 'p8-' + sample.id + '-result-mobile');
+      const previewTouches = [];
+      if (sample.hasTouch) {
+        assert.ok(await readability.page.evaluate(() => navigator.maxTouchPoints > 0), 'touch scenario has a real touch-capable browser context');
+        await readability.page.exposeFunction('__naranhiPreviewTouch', isTrusted => previewTouches.push(isTrusted));
+        await card.locator('.route-preview-link').evaluate(element => element.addEventListener('touchstart', event => {
+          window.__naranhiPreviewTouch(event.isTrusted);
+        }, { once: true, passive: true }));
+        await card.locator('.route-preview-link').tap();
+      } else await card.locator('.route-preview-link').click();
+      await waitForRoute(readability.page, route.id);
+      if (sample.hasTouch) assert.deepEqual(previewTouches, [true], 'trusted preview touch keeps the selected route id');
+      await assertLeafletRoute(readability.page, trip.response, route);
+      await assertDetailExplanation(readability.page, route, snapshot, trip.response);
+      await shot(readability.page, 'p8-' + sample.id + '-detail-mobile');
+      readabilityExamples.push({ case: sample.id, gentleSlope: false, ...summary,
+        actualApiStatus: actualResponse.status(), routeId: route.id, distanceM: route.distanceM,
+        previewInteraction: sample.hasTouch ? 'trusted touch' : 'mouse click' });
+      completed.push('P8 ' + sample.id + ': actual request, active keywords only, conditional slope text, matching result/detail');
+      await closeContext(readability.context);
+    }
+
+    const emptyContext = await observedContext(browser, 'p8-empty-result');
+    const emptyPage = await emptyContext.newPage();
+    const beforeEmptyRequests = requests.length;
+    await emptyPage.goto(base + '/result.html');
+    await emptyPage.locator('#empty-state').waitFor({ state: 'visible' });
+    assert.equal(await emptyPage.locator('#empty-state').count(), 1);
+    assert.equal(await emptyPage.locator('a.back-link[href="/home.html"]').count(), 1);
+    const emptyPlacement = await emptyPage.evaluate(() => {
+      const empty = document.getElementById('empty-state');
+      const back = document.querySelector('main.result > a.back-link');
+      const intro = document.querySelector('.result-intro');
+      const routes = document.getElementById('routes-container');
+      const precedes = (first, second) => Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return { emptyBeforeIntro: precedes(empty, intro), backBeforeIntro: precedes(back, intro),
+        emptyBeforeRoutes: precedes(empty, routes), backBeforeRoutes: precedes(back, routes) };
+    });
+    assert.deepEqual(emptyPlacement, { emptyBeforeIntro: true, backBeforeIntro: true,
+      emptyBeforeRoutes: true, backBeforeRoutes: true });
+    assert.equal(await emptyPage.locator('.route-card').count(), 0);
+    assert.equal(requests.slice(beforeEmptyRequests).filter(item => item.url.includes('/api/')).length, 0);
+    await shot(emptyPage, 'p8-empty-result-mobile');
+    completed.push('P8 empty result has one top empty state and return link without fabricated routes');
+    await closeContext(emptyContext);
 
     assert.deepEqual(errors, []);
     assert.deepEqual(externalRequests.filter(item => !externalAllowed(item.url)), []);

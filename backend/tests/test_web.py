@@ -148,6 +148,8 @@ class WebServerTests(unittest.TestCase):
                 expected_scripts = ["/static/js/script.js"]
                 expected_stylesheets = ["/static/css/style.css"]
                 approved_external = set()
+                if page in ("result", "route"):
+                    expected_scripts.insert(0, "/static/js/route-explanations.js")
                 if page == "route":
                     expected_scripts.insert(0, LEAFLET_JS)
                     expected_stylesheets.insert(0, LEAFLET_CSS)

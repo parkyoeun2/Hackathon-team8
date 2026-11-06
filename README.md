@@ -1,6 +1,6 @@
 # Hackathon-team8
 
-## P5/P6/P7 통합 실행
+## P5/P6/P7/P8 통합 실행
 
 FastAPI 한 서버가 HTML 5개와 `/static`의 CSS·JavaScript·이미지를 제공하고, 같은 출처의 `/api/routes`, `/api/conditions/parse`를 처리합니다. Flask나 별도 프론트 빌드 서버는 사용하지 않습니다. P5 기준 커밋은 `a338762`이며, P6는 같은 worktree의 `feature/p6-leaflet-integration` 브랜치에서 작업합니다. 기존 P5 브랜치는 보존합니다.
 
@@ -50,7 +50,7 @@ Leaflet CSS·JS는 `https://unpkg.com/leaflet@1.9.4/dist/`의 고정 버전을 S
 
 ```powershell
 $env:NARANHI_TEST_URL = 'http://127.0.0.1:8000'
-$env:NARANHI_TEST_ARTIFACTS = '.p5-artifacts/p7-demo-places'
+$env:NARANHI_TEST_ARTIFACTS = '.p5-artifacts/p8-route-explanations'
 # 현재 PC에서 확인한 테스트 도구 경로입니다. 다른 PC에서는 설치된 경로로 바꿉니다.
 $env:NARANHI_PLAYWRIGHT_MODULE = 'C:\Users\kmj00\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules\playwright'
 $env:NARANHI_CHROME_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
@@ -79,3 +79,27 @@ A가 계산하는 `distanceM`은 보행 네트워크 경로의 구간 길이 합
 기본 프로필의 기숙사 ↔ 역 출구 대표 경로는 A 기준 1121.3m, 좌표 53개, 확인된 계단 0개, 경사 데이터 확인율 19.7%, `sameRoute:true`입니다. 이 값은 접근성이나 실제 현장 상태를 보장하지 않습니다. 화면은 항상 API가 반환한 값을 표시합니다.
 
 추가 HTTP 테스트는 네 장소의 서로 다른 12개 방향 × 일반·캐리어·유모차 3조건을 검증합니다. Chrome 테스트는 기존 9개 흐름과 새 두 장소의 정·역방향·세 조건 6개 흐름을 검증하고, `.p5-artifacts/p7-demo-places/`에 별도 보고서를 저장합니다.
+
+
+### P8 경로 비교 설명
+
+P8 작업 브랜치는 `feature/p8-route-explanations`이며 기준은 P7 커밋 `bc98400`입니다. API 계약과 `route.reason`은 그대로 유지합니다. 결과·상세 화면에만 순수 JS 모듈 `app/static/js/route-explanations.js`의 비교 설명을 추가합니다. check 화면과 경로 계산 로직은 변경하지 않습니다.
+
+- 비교 기준은 같은 ID·같은 표시 좌표를 제외한 다른 반환 경로 중 거리 값이 가장 작은 경로입니다. 거리로 정할 수 없으면 첫 비교 후보를 사용합니다. 이는 전체 네트워크의 최단 경로 판정이 아닙니다.
+- 비교 대상은 `2번 경로(대안 경로)`처럼 번호와 API 이름으로 명시합니다. `sameRoute:true`여도 별도 대안이 있으면 비교합니다.
+- 두 경로 모두 유한한 숫자를 제공한 항목만 뺄셈합니다. 거리·상승·최대 경사 차이는 소수 첫째 자리로 표시하고 반올림 결과가 0이면 생략합니다.
+- 계단은 확인된 **구간 수**로 설명합니다. 최대 경사는 확인된 최대값 차이만 `%p`로 표시하며 경로 전체가 더 완만하다고 말하지 않습니다.
+- null은 비교에서 제외합니다. 경사 데이터 확인율 100% 미만은 미확인 구간이 있다는 안내를 수치 설명과 별도로 표시합니다. 임의의 낮은 확인율 임계값은 만들지 않습니다.
+- 이동 상태 문구는 승인된 `approvedToday`의 true 값과 저장된 프로필 선호만 사용합니다. 검색 조건을 설명할 뿐 실제 편안함이나 접근성 보장이 아닙니다.
+- 비교 후보가 없거나 표시할 수치 차이가 없으면 기존 추천 이유와 입력 조건을 안내합니다. 응답·저장된 경로 객체는 변경하지 않습니다.
+
+최신 프론트 `770fed0`을 비교하여 result의 기존 `empty-state`와 `back-link` 두 노드만 상단으로 이동했습니다. HTML 전체·backend·경사 비교 그림은 가져오지 않았습니다.
+
+새 순수 JS 테스트는 Node 기본 테스트 기능을 사용하므로 패키지를 설치하지 않습니다. 테스트 fixture는 설명 함수의 단위 테스트에만 쓰이며 실제 API 성공 응답을 대체하지 않습니다.
+
+```powershell
+$naranhiNode = 'C:\Users\kmj00\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe'
+& $naranhiNode --test .\tests\route_explanations.test.cjs
+```
+
+기존 Python 테스트 50개와 Chrome 흐름 15개를 유지하고, 실제 응답 기반 비교 설명·선택 경로 일치·상단 빈 상태 표시를 함께 검증합니다. P8 브라우저 보고서는 `.p5-artifacts/p8-route-explanations/`에 저장합니다.
