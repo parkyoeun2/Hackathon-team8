@@ -21,11 +21,18 @@ import route_service_v02 as route_service  # noqa: E402
 import uvicorn  # noqa: E402
 
 
+LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+LEAFLET_CSS_INTEGRITY = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+LEAFLET_JS_INTEGRITY = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+
+
 class PageElements(HTMLParser):
     def __init__(self):
         super().__init__()
         self.body_page = None
         self.scripts = []
+        self.stylesheets = []
         self.resources = []
         self.links = []
 
@@ -37,7 +44,10 @@ class PageElements(HTMLParser):
             self.scripts.append(attrs)
         if tag in ("script", "img") and attrs.get("src"):
             self.resources.append(attrs["src"])
-        if tag == "link" and attrs.get("href", "").startswith("/static/"):
+        if tag == "link" and attrs.get("rel") == "stylesheet":
+            self.stylesheets.append(attrs)
+            self.resources.append(attrs.get("href", ""))
+        elif tag == "link" and attrs.get("href", "").startswith("/static/"):
             self.resources.append(attrs["href"])
         if tag == "a" and attrs.get("href"):
             self.links.append(attrs["href"])
@@ -124,15 +134,40 @@ class WebServerTests(unittest.TestCase):
                 parser = PageElements()
                 parser.feed(body.decode("utf-8"))
                 self.assertEqual(parser.body_page, page)
-                self.assertEqual(len(parser.scripts), 1)
-                self.assertEqual(parser.scripts[0].get("src"), "/static/js/script.js")
-                self.assertIn("defer", parser.scripts[0])
+                expected_scripts = ["/static/js/script.js"]
+                expected_stylesheets = ["/static/css/style.css"]
+                approved_external = set()
+                if page == "route":
+                    expected_scripts.insert(0, LEAFLET_JS)
+                    expected_stylesheets.insert(0, LEAFLET_CSS)
+                    approved_external = {LEAFLET_CSS, LEAFLET_JS}
+                self.assertEqual(
+                    [script.get("src") for script in parser.scripts], expected_scripts,
+                )
+                self.assertEqual(
+                    [style.get("href") for style in parser.stylesheets],
+                    expected_stylesheets,
+                )
+                for script in parser.scripts:
+                    self.assertIn("defer", script)
+                    self.assertNotIn("async", script)
+                if page == "route":
+                    for asset, integrity in (
+                        (parser.stylesheets[0], LEAFLET_CSS_INTEGRITY),
+                        (parser.scripts[0], LEAFLET_JS_INTEGRITY),
+                    ):
+                        self.assertEqual(asset.get("integrity"), integrity)
+                        self.assertEqual(asset.get("crossorigin"), "anonymous")
                 for resource in parser.resources:
-                    self.assertTrue(resource.startswith("/static/"), resource)
+                    if resource.startswith("/static/"):
+                        resources.add(resource)
+                    else:
+                        self.assertIn(resource, approved_external)
                 for link in parser.links:
                     if not link.startswith("#"):
                         self.assertTrue(link.startswith("/"), link)
-                resources.update(parser.resources)
+                # CDN assets are pinned above. HTTP checks remain local and
+                # deterministic; real loading is covered by browser tests.
         for resource in resources:
             with self.subTest(resource=resource):
                 status, _, _ = self.request(resource)

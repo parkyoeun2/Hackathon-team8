@@ -364,6 +364,17 @@
       card.dataset.routeId = route.id;
       card.setAttribute("role", "radio");
       card.append(node("h2", "route-label", route.label));
+      const preview = node("a", "route-preview-link");
+      preview.href = `/route.html?routeId=${encodeURIComponent(route.id)}`;
+      preview.setAttribute("aria-label", `${route.label} 경로 미리보기, 실제 지도 보기`);
+      const diagram = node("div", "route-map route-preview");
+      diagram.setAttribute("aria-hidden", "true");
+      renderCoordinateMap(diagram, route.coordinates);
+      preview.append(diagram, node("span", "preview-caption", "실제 경로 미리보기 · 눌러서 지도 보기"));
+      preview.addEventListener("click", (event) => {
+        try { select(route.id); } catch (error) { event.preventDefault(); message("form-error", error.message); }
+      });
+      card.append(preview);
       appendMetrics(card, route);
       const link = node("a", "route-link", "이 경로 보기 →");
       link.href = `/route.html?routeId=${encodeURIComponent(route.id)}`;
@@ -422,6 +433,59 @@
     container.replaceChildren(svg);
   }
 
+  // ZIP의 지도 코드에서 좌표 변환·경로선·끝점 마커만 선별했습니다.
+  // result/check는 SVG를 사용하며, Leaflet은 route에서만 초기화합니다.
+  function renderRouteMap(container, trip, selectedRoute) {
+    const leaflet = window.L;
+    const stylesheet = document.querySelector("link[data-leaflet-css]");
+    const unavailable = "지도를 불러오지 못했습니다. 연결을 확인하거나 경로 비교의 미리보기를 이용해 주세요. 아래 경로 정보는 계속 확인할 수 있습니다.";
+    if (!leaflet || leaflet.version !== "1.9.4" || !stylesheet?.sheet) {
+      container.hidden = true;
+      message("map-warning", unavailable);
+      return;
+    }
+    let map;
+    try {
+      container.hidden = false;
+      map = leaflet.map(container, { scrollWheelZoom: false });
+      const tiles = leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      });
+      tiles.on("tileerror", () => message("map-warning", "배경지도를 불러오지 못한 구간이 있습니다. 경로선과 아래 정보를 확인해 주세요."));
+      tiles.addTo(map);
+      const palette = ["#287c52", "#386ec2", "#a76a22"];
+      let selectedLine;
+      trip.response.routes.forEach((route, index) => {
+        const selected = route.id === selectedRoute.id;
+        // API [경도, 위도]를 Leaflet [위도, 경도]로 변환합니다.
+        const points = route.coordinates.map(([lng, lat]) => [lat, lng]);
+        const line = leaflet.polyline(points, {
+          color: palette[index], weight: selected ? 7 : 3,
+          opacity: selected ? 1 : 0.45, dashArray: selected ? null : "8 7",
+          className: "route-line" + (selected ? " route-line--selected" : ""),
+        }).addTo(map);
+        line.bindTooltip(node("span", "", route.label));
+        if (selected) selectedLine = line;
+      });
+      const points = selectedRoute.coordinates.map(([lng, lat]) => [lat, lng]);
+      [[points[0], "출발 · 보행 노드", "#287c52"],
+        [points[points.length - 1], "도착 · 보행 노드", "#ad3d57"]].forEach(([point, label, color]) => {
+        leaflet.circleMarker(point, { radius: 8, color: "#ffffff", weight: 2,
+          fillColor: color, fillOpacity: 1 }).addTo(map)
+          .bindTooltip(node("span", "", label), { permanent: true, direction: "top", offset: [0, -8] });
+      });
+      map.fitBounds(leaflet.latLngBounds(points), { padding: [32, 32], maxZoom: 18 });
+      selectedLine.bringToFront();
+      window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    } catch (_) {
+      if (map) map.remove();
+      container.replaceChildren();
+      container.hidden = true;
+      message("map-warning", unavailable);
+    }
+  }
+
   function initDetail(page) {
     const trip = readTrip();
     if (!trip) return showEmpty("표시할 경로가 없습니다. 홈에서 경로를 다시 요청해 주세요.");
@@ -441,7 +505,8 @@
       card.append(checkLink);
     }
     byId("route-detail").replaceChildren(card);
-    renderCoordinateMap(byId("route-map"), route.coordinates);
+    if (page === "route") renderRouteMap(byId("route-map"), trip, route);
+    else renderCoordinateMap(byId("route-map"), route.coordinates);
     const choose = byId("choose-route-button");
     if (choose) choose.addEventListener("click", () => {
       try {

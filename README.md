@@ -1,8 +1,8 @@
 # Hackathon-team8
 
-## P5 통합 실행
+## P5/P6 통합 실행
 
-FastAPI 한 서버가 HTML 5개와 `/static`의 CSS·JavaScript·이미지를 제공하고, 같은 출처의 `/api/routes`, `/api/conditions/parse`를 처리합니다. Flask나 별도 프론트 빌드 서버는 사용하지 않습니다. 기존 브랜치의 파일은 그대로 두고 `integration/p5-frontend-backend` worktree에서 작업했습니다.
+FastAPI 한 서버가 HTML 5개와 `/static`의 CSS·JavaScript·이미지를 제공하고, 같은 출처의 `/api/routes`, `/api/conditions/parse`를 처리합니다. Flask나 별도 프론트 빌드 서버는 사용하지 않습니다. P5 기준 커밋은 `a338762`이며, P6는 같은 worktree의 `feature/p6-leaflet-integration` 브랜치에서 작업합니다. 기존 P5 브랜치는 보존합니다.
 
 ### 현재 PC의 PowerShell
 
@@ -28,7 +28,13 @@ $naranhiPython = (Resolve-Path '..\..\backend\.venv\Scripts\python.exe').Path
 
 `null`은 정보 미확인으로 표시하고 실제 0과 구분합니다. `gradeCoveragePercent`는 경사 데이터의 거리 확인율이며 경사율이 아닙니다. 확인된 계단 0개도 무장애 경로를 보장하지 않습니다. 소요시간은 제공하지 않습니다.
 
-경로도는 **실제 API의 `[lng, lat]` 좌표로 그린 SVG**입니다. 배경 도로지도·지오코딩·실시간 길 안내는 제공하지 않습니다. 선택 완료는 현재 화면에서의 경로 선택 확인이며 서버에 이력을 저장하지 않습니다. 지도 예시 SVG로 실제 결과를 대체하지 않습니다.
+결과 화면에는 **실제 API의 `[lng, lat]` 좌표로 그린 SVG 미리보기**를 표시합니다. 미리보기 클릭·키보드 Enter 또는 “이 경로 보기”로 선택한 `routeId`의 상세 화면으로 이동합니다. 상세 화면만 Leaflet 1.9.4와 OpenStreetMap 배경지도를 사용하며, 정보 확인 화면은 기존 SVG를 유지합니다.
+
+상세 지도는 실제 좌표를 `[lat, lng]`로 변환하여 경로선을 그리고 선택 경로를 강조합니다. 출발·도착 마커는 경로 첫·끝 보행 노드이며 입력한 장소 좌표와 다를 수 있습니다. Leaflet 자산을 불러오지 못하면 지도 오류를 안내하고 지표·경고·뒤로가기·경로 선택 기능은 유지합니다. 타일 실패도 별도로 안내합니다.
+
+Leaflet CSS·JS는 `https://unpkg.com/leaflet@1.9.4/dist/`의 고정 버전을 SRI로 확인합니다. 타일은 `https://tile.openstreetmap.org/{z}/{x}/{y}.png`를 사용하고 지도 안의 OpenStreetMap 출처 표기를 유지합니다. 배경지도에는 인터넷 연결이 필요합니다. 지오코딩·GPS·쉼터·실시간 길 안내는 이번 변경에 포함하지 않습니다. 선택 완료는 탭 안의 선택 확인이며 서버에 이력을 저장하지 않습니다.
+
+프론트팀 `Hackathon-team8-leaflet.zip`에서 좌표 변환·경로선·끝점 마커·화면 맞춤 방식을 선별했습니다. ZIP SHA256은 `97c7a1b3f7e74d7988c97cd4b6ea42d1bb689822c74636c3efb0877300ef6f79`입니다. ZIP의 backend, result/check Leaflet 적용, 경사 설명 그림은 가져오지 않았습니다. 참고: [Leaflet 1.9.4](https://leafletjs.com/reference-1.9.4.html), [OSM 타일 정책](https://operations.osmfoundation.org/policies/tiles/).
 
 ### 테스트
 
@@ -40,10 +46,11 @@ $naranhiPython = (Resolve-Path '..\..\backend\.venv\Scripts\python.exe').Path
 
 기존 경로 테스트는 `docs/example_input.json`, `docs/example_output.json`을 읽습니다. 원본 미추적 자료에서 내용 그대로 복사했으며 테스트가 덮어쓰지 않습니다. 이 두 JSON도 통합 소스와 함께 버전 관리해야 다른 PC에서 테스트할 수 있습니다. 원본 엑셀은 이번 worktree에 복사하지 않았습니다.
 
-실제 브라우저 테스트는 Playwright가 있는 테스트 환경에서 실행합니다. 성공 응답은 실제 FastAPI/A 함수만 사용하고, 오류 표시 한 경우에만 404를 주입합니다. 앱의 실행 의존성에는 Playwright를 추가하지 않았습니다.
+실제 브라우저 테스트는 Playwright가 있는 테스트 환경에서 실행합니다. 성공 응답은 실제 FastAPI/A 함수만 사용합니다. 오류 화면 검사에서는 404 또는 지도 자산·타일 실패만 주입합니다. 실제 Leaflet 레이어 좌표·선택 강조·스냅된 끝점, SVG 미리보기의 클릭·키보드 이동도 검증합니다. 보고서의 `backgroundVerified`는 실제 OSM 타일 표시 확인 여부이며, 지도 코드 검증과 구분합니다. 앱의 실행 의존성에는 Playwright를 추가하지 않았습니다.
 
 ```powershell
 $env:NARANHI_TEST_URL = 'http://127.0.0.1:8000'
+$env:NARANHI_TEST_ARTIFACTS = '.p5-artifacts/p6-leaflet'
 # 현재 PC에서 확인한 테스트 도구 경로입니다. 다른 PC에서는 설치된 경로로 바꿉니다.
 $env:NARANHI_PLAYWRIGHT_MODULE = 'C:\Users\kmj00\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules\playwright'
 $env:NARANHI_CHROME_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
