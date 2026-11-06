@@ -1,0 +1,206 @@
+/* ===== 1. 공통 색 · 글꼴 (여기 색만 바꾸면 전체가 바뀜) ===== */
+:root {
+  --green: #466956;        /* 진한 초록 */
+  --green-light: #EAF2EC;  /* 연한 초록 */
+  --text: #1F2A24;         /* 기본 글자 */
+  --text-sub: #6B7570;     /* 회색 보조 글자 */
+  --line: #E3E8E4;         /* 카드 테두리 */
+  --radius: 16px;          /* 둥근 모서리 */
+}
+
+/* 기본 설정: 여백, 점(•), 밑줄 없애기 */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: var(--text);
+  background: #fff;
+}
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; text-decoration: none; }
+[hidden] { display: none !important; } /* hidden은 무조건 숨기기 */
+
+/* 화면 가운데에 휴대폰 폭으로 */
+.header, main {
+  max-width: 420px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* ===== 2. 상단 로고 ===== */
+.header { padding-top: 20px; padding-bottom: 12px; }
+.logo {
+  display: inline-flex;   /* 나뭇잎과 글자를 가로로 */
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.logo img { width: 20px; height: 20px; }
+
+/* ===== 3. 04 경로 비교 결과 ===== */
+.result { padding-bottom: 40px; }
+
+/* 제목 구역 */
+.result-intro h1 { margin-top: 16px; font-size: 22px; font-weight: 700; }
+.route-summary {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.applied-conditions { margin-top: 12px; font-size: 12px; color: var(--text-sub); }
+
+/* 카드 목록: 카드끼리 12px 띄우기 */
+.route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* 카드 기본 (가장 빠른 길) */
+.route-card {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+/* 추천 카드 (나에게 편한 길): 연초록 배경 + 초록 테두리 */
+.route-card.is-recommended {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+/* 경로 이름 */
+.route-label { font-size: 15px; font-weight: 700; color: var(--green); }
+
+/* 18분 · 1.1km */
+.route-main {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* 아이콘 + 문장 3줄 */
+.route-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.route-stats li {
+  display: flex;          /* 아이콘과 글자를 가로로 */
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.stat-icon { width: 20px; height: 20px; flex-shrink: 0; }
+
+/* 추천 이유 */
+.route-reason-title { margin-top: 14px; font-size: 13px; font-weight: 700; }
+.route-reason {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+/* 이 경로 보기 → */
+.route-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ===== 4. 공통 버튼 (프로필, 홈, 상세에서 같이 씀) ===== */
+.btn-primary {
+  display: block;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: var(--green);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 52px;
+  cursor: pointer;
+}
+
+/* "< 다시 선택하기" 같은 뒤로 가기 링크 (앞의 < 는 여기서 붙임) */
+.back-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.back-link::before { content: "< "; }
+
+/* ===== 5. 05 선택 경로 상세 ===== */
+.route-detail { padding-bottom: 40px; }
+
+/* 제목: 04에서는 초록 작은 글씨였지만 여기서는 검정 큰 제목 */
+.route-detail .route-label {
+  margin-top: 8px;
+  font-size: 22px;
+  color: var(--text);
+}
+
+/* 지도 */
+.route-map-box { margin: 16px 0 0; }   /* figure 기본 여백 없애기 */
+.route-map img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+.map-caption { margin-top: 10px; font-size: 12px; color: var(--text-sub); }
+
+/* 경로 정보 카드 */
+.route-detail .route-card { margin-top: 16px; }
+.route-detail .route-card h2 { margin-top: 12px; font-size: 14px; font-weight: 700; }
+
+/* 완만한 길 그림 상자 */
+.slope-illust {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--green-light);
+}
+.slope-illust-title { font-size: 13px; font-weight: 700; color: var(--green); }
+.slope-illust-graphic { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; } .slope-illust-walker { width: 24px; height: auto; flex-shrink: 0; } .slope-illust-line { flex: 1; min-width: 0; height: auto; }
+.slope-illust-note { margin-top: 8px; font-size: 11px; color: var(--text-sub); }
+
+/* 이 경로 선택하기 버튼 위 여백 */
+.route-detail .btn-primary { margin-top: 32px; }
+
+/* 선택 완료 / 에러 문구 (평소엔 hidden) */
+.select-done { margin-top: 12px; font-size: 13px; font-weight: 700; color: var(--green); text-align: center; }
+.error-message { margin-top: 12px; font-size: 13px; color: #C0392B; }
+
+/* ===== 6. 분홍 경고 상자 (05 안 + 06 check.html에서 같이 씀) ===== */
+.warning-box {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: #F9E9EB;
+}
+.warning-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.warning-title img { width: 16px; height: 16px; }
+.warning-list, .warning-text { margin-top: 8px; font-size: 13px; line-height: 1.5; }
+.warning-sub { margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--text-sub); }
