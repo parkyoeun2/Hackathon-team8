@@ -8,10 +8,12 @@ from starlette.exceptions import HTTPException
 from conditions_api import router as conditions_router
 from route_service_v02 import RouteServiceError, recommend_routes
 from schemas import ErrorResponse, RouteRequest, RouteResponse
+from web import install_frontend
 
 
 app = FastAPI()
 app.include_router(conditions_router)
+install_frontend(app)
 
 
 def error_response(status_code: int, code: str, message: str) -> JSONResponse:

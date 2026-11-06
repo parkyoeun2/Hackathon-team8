@@ -4,69 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나란히 - 선택 경로 상세</title>
-  <!-- CSS는 프론트엔드2가 작성 -->
-  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
 </head>
-<body>
-
-  <!-- ===== 상단: 로고 ===== -->
+<body data-page="route">
   <header class="header">
-    <a href="home.html" class="logo">
-      <img src="../static/img/logo-leaf.svg" alt="">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
       <span>나란히</span>
     </a>
   </header>
-
-  <!-- ===== 본문: 04에서 고른 경로 1개 (routes[] 중 하나, 내용은 프론트엔드2가 JS로 채움) ===== -->
   <main class="route-detail">
-
-    <!-- 경로 이름 (label) -->
-    <h1 class="route-label">나에게 편한 길</h1>
-
-    <!-- 1. 지도: 실제 지도는 coordinates([경도, 위도])로 JS가 그림. 그 전까지는 시연용 그림 -->
+    <a href="/result.html" class="back-link">경로 다시 선택하기</a>
+    <h1 class="page-title">선택한 경로</h1>
+    <p id="trip-summary" class="route-summary"></p>
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
     <figure class="route-map-box">
-      <div id="route-map" class="route-map">
-        <img src="../static/img/map-demo.svg" alt="우리 집에서 동네 우체국까지 가는 경로 지도">
-      </div>
-      <figcaption class="map-caption">우리 집 → 동네 우체국 · 시연용 지도 도식</figcaption>
+      <div id="route-map" class="route-map" role="img" aria-label="API가 반환한 실제 경로 좌표도"></div>
+      <figcaption class="map-caption">실제 경로 좌표도 · 배경지도 미포함</figcaption>
     </figure>
-
-    <!-- 2. 경로 정보 카드 (예시 값) -->
-    <section class="route-card">
-      <!-- 시간은 명세서에 없음 (백엔드 확인 중), 거리 = distanceM -->
-      <p class="route-main">
-        <span class="route-time">18분</span>
-        <span aria-hidden="true">·</span>
-        <span class="route-distance">1.1km</span>
-      </p>
-      <!-- maxSlopePercent / stairsCount / crosswalkCount -->
-      <ul class="route-stats">
-        <li>최대 경사 <span class="stat-slope">4%</span></li>
-        <li>계단 <span class="stat-stairs">0개</span></li>
-        <li>횡단보도 <span class="stat-crosswalks">3개</span></li>
-      </ul>
-
-      <!-- 추천 이유 (reason, ✓ 표시는 CSS로) -->
-      <h2>이 길을 추천하는 이유</h2>
-      <ul class="route-reasons">
-        <li>저장한 이동 프로필을 반영했어요</li>
-        <li>오늘 입력한 "캐리어가 있어요"도 반영했어요</li>
-        <li>계단이 없고 더 완만한 길을 우선했어요</li>
-      </ul>
-
-      <!-- 경로 주의사항 (routes[].warnings, 없으면 숨김) -->
-      <ul class="route-warnings" hidden></ul>
+    <div id="route-detail"></div>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>선택한 경로가 없어요</h2>
+      <p>경로 비교 화면에서 확인할 경로를 선택해주세요.</p>
+      <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
     </section>
-
-    <!-- 선택 저장 에러 문구 자리 (CHOICE-01, 평소엔 숨김) -->
-    <p class="error-message" role="alert" hidden></p>
-
-    <!-- 누르면 CHOICE-01로 선택 기록 저장 (동작은 프론트엔드2가 JS로) -->
-    <button type="button" class="btn-primary">이 경로 선택하기</button>
-
-    <p class="note">거리·시간·시설 정보는 시연용 예시입니다.</p>
-
+    <p id="selected-status" class="selection-status" role="status" aria-live="polite" hidden></p>
+    <button id="choose-route-button" type="button" class="btn-primary">이 경로 선택하기</button>
+    <p class="data-note">선택 완료는 이 화면에서만 안내해요. 서버에 선택 이력을 저장하지 않아요.</p>
+    <a href="/check.html" class="route-link">데이터 확인 안내 보기 <span aria-hidden="true">→</span></a>
   </main>
-
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>
 </html>

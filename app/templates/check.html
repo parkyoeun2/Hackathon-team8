@@ -4,67 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>나란히 - 경로 정보 확인</title>
-  <!-- CSS는 프론트엔드2가 작성 -->
-  <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
 </head>
-<body>
-
-  <!-- ===== 상단: 로고 ===== -->
+<body data-page="check">
   <header class="header">
-    <a href="home.html" class="logo">
-      <img src="../static/img/logo-leaf.svg" alt="">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
       <span>나란히</span>
     </a>
   </header>
-
-  <!-- ===== 본문: 정보 미확인 구간이 있는 경로 (routes[].warnings가 있을 때, 내용은 JS가 채움) ===== -->
   <main class="check">
-
-    <!-- 1. 제목 구역 -->
+    <a href="/result.html" class="back-link">경로 다시 선택하기</a>
     <section class="check-intro">
       <h1>경로 정보를 확인해주세요</h1>
-      <!-- 출발/도착: 홈에서 입력한 글자 (예시) -->
-      <p class="route-summary">
-        <strong class="route-start">우리 집</strong>
-        <span aria-hidden="true">→</span>
-        <strong class="route-end">동네 우체국</strong>
-      </p>
+      <p id="trip-summary" class="route-summary"></p>
     </section>
-
-    <!-- 2. 경로 카드 (04 result.html과 같은 구조, 예시 값) -->
-    <article class="route-card is-recommended">
-      <h2 class="route-label">나에게 편한 길 <span class="badge">· 추천</span></h2>
-      <!-- 시간은 명세서에 없음 (백엔드 확인 중), 거리 = distanceM -->
-      <p class="route-main">
-        <span class="route-time">18분</span>
-        <span aria-hidden="true">·</span>
-        <span class="route-distance">1.1km</span>
-      </p>
-      <ul class="route-stats">
-        <!-- maxSlopePercent가 없을 때 "정보 미확인" (백엔드 확인 중) -->
-        <li>최대 경사 <span class="stat-slope is-unknown">정보 미확인</span></li>
-        <li>계단 <span class="stat-stairs">0개</span></li>
-        <li>횡단보도 <span class="stat-crosswalks">3개</span></li>
-      </ul>
-      <!-- reason -->
-      <p class="route-reason">계단이 없는 경로예요. 일부 구간의 경사 정보는 확인하지 못했어요.</p>
-      <a href="route.html" class="route-link">이 경로 보기 <span aria-hidden="true">→</span></a>
-    </article>
-
-    <!-- 3. 주의 상자 (routes[].warnings, 분홍 박스) -->
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <figure class="route-map-box">
+      <div id="route-map" class="route-map" role="img" aria-label="API가 반환한 실제 경로 좌표도"></div>
+      <figcaption class="map-caption">실제 경로 좌표도 · 배경지도 미포함</figcaption>
+    </figure>
+    <div id="route-detail"></div>
     <section class="warning-box" role="note" aria-labelledby="warning-title">
       <h2 id="warning-title" class="warning-title">
-        <img src="../static/img/icon-info.svg" alt="">
-        <span>경사 정보 일부 미확인</span>
+        <img src="/static/img/icon-info.svg" alt="">
+        <span>데이터를 이렇게 확인해주세요</span>
       </h2>
-      <p class="warning-text">일부 구간은 고도 데이터가 충분하지 않아 경사 정보를 제공하지 못할 수 있습니다.</p>
-      <p class="warning-sub">정보 미확인은 경사가 없다는 뜻이 아니에요. 확인된 정보와 함께 경로를 살펴보세요.</p>
+      <p class="warning-text">미확인 값은 “정보 미확인”으로 표시해요. 경사 데이터 확인율은 확인 가능한 구간의 거리 비율이에요.</p>
+      <p class="warning-sub">확인된 계단이 0개여도 계단이 없는 길이나 무장애 경로를 보장하지 않아요.</p>
     </section>
-
-    <!-- 4. 돌아가기 (04 경로 비교 화면으로) -->
-    <a href="result.html" class="btn-primary">경로 비교로 돌아가기</a>
-
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>확인할 경로가 없어요</h2>
+      <p>경로 비교 화면에서 경로를 먼저 선택해주세요.</p>
+      <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
+    </section>
+    <p id="selected-status" class="selection-status" role="status" aria-live="polite" hidden></p>
+    <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
   </main>
-
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
 </body>
 </html>

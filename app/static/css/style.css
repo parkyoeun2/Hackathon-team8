@@ -576,11 +576,10 @@ input[type="checkbox"][role="switch"]:focus-visible {
 }
 
 /* ==========================================================================
-   6. 오늘의 이동 상태 확인 (aside.parse-sheet)
+   6. 오늘의 이동 상태 확인 (section.parse-sheet)
    ========================================================================== */
 
-/* 기본 상태: aside는 숨김 */
-aside.parse-sheet,
+/* 분석 응답을 받기 전에는 확인 패널을 숨김 */
 .parse-sheet[hidden] {
   display: none;
 }
@@ -593,14 +592,14 @@ aside.parse-sheet,
   transition: opacity var(--transition-smooth);
 }
 
-/* 확인 모드: 이전 폼 버튼 숨기고 aside 노출 */
+/* 확인 모드: 이전 폼 버튼 숨기고 확인 패널 노출 */
 .home.is-confirming .route-form > .today,
 .home.is-confirming .route-form > .note,
 .home.is-confirming .route-form > .btn-primary {
   display: none;
 }
 
-.home.is-confirming aside.parse-sheet {
+.home.is-confirming .parse-sheet:not([hidden]) {
   display: flex;
   flex-direction: column;
   margin-top: 18px;
@@ -698,12 +697,6 @@ aside.parse-sheet,
   text-align: center;
 }
 
-dialog.parse-sheet {
-  position: static !important;
-  inset: auto !important;
-}
-
-dialog.parse-sheet,
 .parse-sheet {
   border: none !important;
   outline: none !important;
@@ -1307,5 +1300,265 @@ ul.route-summary li[aria-hidden="true"],
   .btn-primary {
     height: 56px;
     font-size: 1.0625rem;
+  }
+}
+
+/* ==========================================================================
+   11. 실제 API 연동 상태와 동적 콘텐츠
+   ========================================================================== */
+[hidden] {
+  display: none !important;
+}
+
+.data-note {
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin: 10px 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.input-box select {
+  width: 100%;
+  min-height: 36px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-main);
+  font: inherit;
+  padding: 4px 26px 4px 0;
+}
+
+.input-box select:focus-visible,
+.today textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.input-box select:disabled,
+.today textarea:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+button:disabled,
+button:disabled:hover {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+  box-shadow: none;
+}
+
+form[aria-busy="true"] {
+  cursor: progress;
+}
+
+.status-message,
+.selection-status {
+  color: var(--color-primary-active);
+  background-color: var(--color-primary-subtle);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  padding: 12px 14px;
+  margin: 10px 0 16px;
+}
+
+.parse-sheet {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  padding: 22px 18px;
+  margin-top: 18px;
+}
+
+.parser-method {
+  font-size: 0.8125rem;
+  color: var(--color-text-sub);
+  margin: -8px 0 16px;
+}
+
+.parse-conditions {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.parse-conditions label {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--color-border-card);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.parse-conditions input[type="checkbox"] {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.parse-conditions .condition-label {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.parse-conditions .condition-state {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.parse-conditions label:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.parse-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  width: 100%;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-button);
+  background: var(--color-bg-card);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-primary-subtle);
+}
+
+.btn-secondary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.empty-state {
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border-card);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  margin: 16px 0;
+}
+
+.empty-state h2 {
+  font-size: 1.125rem;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 0.9375rem;
+  color: var(--color-text-sub);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  margin: 4px 0 12px;
+}
+
+.route-list > .route-card {
+  width: 100%;
+}
+
+.route-stats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.route-stats li {
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.route-stats li:first-child::after {
+  content: none;
+}
+
+.route-stats .is-unknown {
+  color: #92400e;
+}
+
+.route-card .note {
+  text-align: left;
+  margin: 12px 0;
+}
+
+.route-card .route-link {
+  margin-top: 12px;
+}
+
+.result-warning ul,
+.parse-warning ul {
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+.route-warnings li + li,
+.result-warning li + li,
+.parse-warning li + li {
+  margin-top: 6px;
+}
+
+.route-map:empty {
+  display: none;
+}
+
+.route-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+}
+
+body > noscript {
+  width: calc(100% - 40px);
+  max-width: 480px;
+  padding: 16px 0;
+}
+
+@media (max-width: 360px) {
+  .parse-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-title {
+    font-size: 1.35rem;
   }
 }

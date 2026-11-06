@@ -106,7 +106,7 @@ Swagger에서는 `POST /api/routes`의 **Try it out**에 같은 요청을 입력
 
 기존 `backend/test_route_service_v02.py`를 직접 실행하면 예시 JSON을 생성하거나 덮어씁니다. 위의 지정 테스트 명령을 사용하고 기존 예시 파일은 테스트 출력으로 덮어쓰지 않습니다.
 
-선택 이력 저장 API, 프론트 연동과 CORS 설정은 아직 포함하지 않습니다. 프로필은 프론트 localStorage가 저장하며 서버 DB는 사용하지 않습니다.
+선택 이력 저장 API는 아직 포함하지 않습니다. P5 통합 worktree에서는 같은 FastAPI 서버가 프론트도 제공하며 별도 CORS나 Flask 서버가 필요하지 않습니다. 프로필은 프론트 localStorage가 저장하며 서버 DB는 사용하지 않습니다. 통합 실행법은 루트 README를 참고합니다.
 
 ## 오늘 상태 분석: P4
 
