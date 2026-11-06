@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 경로 정보 확인</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
+</head>
+<body data-page="check">
+  <header class="header">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+  <main class="check">
+    <a href="/result.html" class="back-link">경로 다시 선택하기</a>
+    <section class="check-intro">
+      <h1>경로 정보를 확인해주세요</h1>
+      <p id="trip-summary" class="route-summary"></p>
+    </section>
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <figure class="route-map-box">
+      <div id="route-map" class="route-map" role="img" aria-label="API가 반환한 실제 경로 좌표도"></div>
+      <figcaption class="map-caption">실제 경로 좌표도 · 배경지도 미포함</figcaption>
+    </figure>
+    <div id="route-detail"></div>
+    <section class="warning-box" role="note" aria-labelledby="warning-title">
+      <h2 id="warning-title" class="warning-title">
+        <img src="/static/img/icon-info.svg" alt="">
+        <span>데이터를 이렇게 확인해주세요</span>
+      </h2>
+      <p class="warning-text">미확인 값은 “정보 미확인”으로 표시해요. 경사 데이터 확인율은 확인 가능한 구간의 거리 비율이에요.</p>
+      <p class="warning-sub">확인된 계단이 0개여도 계단이 없는 길이나 무장애 경로를 보장하지 않아요.</p>
+    </section>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>확인할 경로가 없어요</h2>
+      <p>경로 비교 화면에서 경로를 먼저 선택해주세요.</p>
+      <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
+    </section>
+    <p id="selected-status" class="selection-status" role="status" aria-live="polite" hidden></p>
+    <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
+  </main>
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 이동 프로필 설정</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
+</head>
+<body data-page="profile">
+  <header class="header">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+  <main class="profile">
+    <section class="profile-intro">
+      <h1>나의 이동 프로필 설정</h1>
+      <p>한 번 설정하면, 다음부터는 나에게 맞는 길을 추천해드려요.</p>
+    </section>
+    <form id="profile-form" class="profile-form">
+      <ul class="option-list">
+        <li class="option">
+          <label>
+            <img class="option-icon" src="/static/img/icon-stairs.svg" alt="">
+            <span class="option-text"><strong>계단</strong><span>최대한 피하기</span></span>
+            <input type="checkbox" name="stairs" value="avoid" role="switch" checked>
+          </label>
+        </li>
+        <li class="option">
+          <label>
+            <img class="option-icon" src="/static/img/icon-slope.svg" alt="">
+            <span class="option-text"><strong>급경사</strong><span>피하기</span></span>
+            <input type="checkbox" name="gentleSlope" role="switch" checked>
+          </label>
+        </li>
+        <li class="option">
+          <label>
+            <img class="option-icon" src="/static/img/icon-gap.svg" alt="">
+            <span class="option-text"><strong>횡단보도 적은 길</strong><span>OSM에 표시된 횡단 구간 피하기</span></span>
+            <input type="checkbox" name="crosswalks" value="avoid" role="switch" checked>
+          </label>
+        </li>
+        <li class="option">
+          <label>
+            <img class="option-icon" src="/static/img/icon-detour.svg" alt="">
+            <span class="option-text"><strong>편한 길 우선</strong><span>조금 돌아가도 편안한 길을 우선해요</span></span>
+            <input type="checkbox" name="comfortFirst" role="switch" checked>
+          </label>
+        </li>
+      </ul>
+      <p class="note">편한 길 우선을 켜면 편안함 우선과 우회 허용을 함께 적용해요.</p>
+      <p class="data-note">횡단 구간 회피는 실제 횡단 횟수 감소나 보행 단절 회피를 보장하지 않아요.</p>
+      <p id="form-error" class="error-message" role="alert" hidden></p>
+      <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+      <button type="submit" class="btn-primary">내 프로필 저장하고 시작하기</button>
+      <p class="data-note">설정은 이 브라우저에 저장되며 나중에 수정할 수 있어요.</p>
+    </form>
+  </main>
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
+</body>
+</html>

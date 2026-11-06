@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 오늘의 이동</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
+</head>
+<body data-page="home">
+  <header class="header">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+  <main class="home">
+    <section class="home-intro">
+      <a href="/profile.html" class="profile-edit-link">이동 프로필 수정하기</a>
+      <h1>어디로 갈까요?</h1>
+      <p class="profile-status">
+        <img src="/static/img/icon-check.svg" alt="">
+        <span>나의 이동 프로필 적용 중</span>
+      </p>
+    </section>
+    <form id="route-form" class="route-form">
+      <div class="input-box">
+        <label for="start">출발지</label>
+        <select id="start" name="start" required aria-describedby="demo-place-note">
+          <option value="">출발지를 선택해주세요</option>
+        </select>
+      </div>
+      <div class="input-box">
+        <label for="end">목적지</label>
+        <select id="end" name="end" required aria-describedby="demo-place-note">
+          <option value="">목적지를 선택해주세요</option>
+        </select>
+      </div>
+      <p id="demo-place-note" class="data-note">현재는 검증된 두 시연 장소 사이의 경로를 안내해요.</p>
+      <section class="today" aria-labelledby="today-title">
+        <h2 id="today-title">오늘 이동에 특별한 상황이 있나요?</h2>
+        <p class="today-desc">필요한 날에만 한마디 더해주세요.</p>
+        <div class="input-box">
+          <label for="today-status">오늘의 이동 상태 (선택)</label>
+          <textarea id="today-status" name="text" aria-describedby="today-input-note"
+            placeholder="예: 캐리어가 있어요 / 다리를 다쳤어요 / 유모차를 끌고 있어요"></textarea>
+        </div>
+        <button id="parse-button" type="button" class="btn-ai">입력 완료</button>
+        <p id="today-input-note" class="note">공백을 제외하고 500자까지 입력할 수 있어요. 원문은 서버에 저장하지 않아요.</p>
+      </section>
+      <p class="note">오늘 상태를 입력하지 않으면 저장된 이동 프로필만 적용해요.</p>
+      <p id="form-error" class="error-message" role="alert" hidden></p>
+      <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+      <button id="search-button" type="submit" class="btn-primary">나에게 편한 길 찾기</button>
+    </form>
+    <section id="parse-panel" class="parse-sheet" aria-labelledby="parse-title" hidden>
+      <h2 id="parse-title">오늘의 이동 상태를<br>확인해주세요</h2>
+      <p id="parser-method" class="parser-method"></p>
+      <div class="parse-status">
+        <p class="parse-status-label">인식한 표현</p>
+        <p id="parse-terms" class="parse-status-value"></p>
+      </div>
+      <p class="data-note">맞는 항목을 확인·수정한 뒤 적용해주세요. 미확인은 상태를 확정하지 않았다는 뜻이에요.</p>
+      <div id="parse-conditions" class="parse-conditions" role="group" aria-label="이번 경로에 적용할 오늘 상태"></div>
+      <div id="parse-warning" class="parse-warning" role="alert" hidden></div>
+      <p class="note">승인한 상태만 이번 경로에 적용하며, 저장된 프로필은 유지돼요.</p>
+      <div class="parse-actions">
+        <button id="parse-edit-button" type="button" class="btn-secondary">다시 입력하기</button>
+        <button id="parse-confirm-button" type="button" class="btn-primary">이 조건으로 적용하기</button>
+      </div>
+    </section>
+  </main>
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
+</body>
+</html>

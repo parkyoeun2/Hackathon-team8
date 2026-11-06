@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나란히 - 선택 경로 상세</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/script.js" defer></script>
+</head>
+<body data-page="route">
+  <header class="header">
+    <a href="/home.html" class="logo">
+      <img src="/static/img/logo-leaf.svg" alt="">
+      <span>나란히</span>
+    </a>
+  </header>
+  <main class="route-detail">
+    <a href="/result.html" class="back-link">경로 다시 선택하기</a>
+    <h1 class="page-title">선택한 경로</h1>
+    <p id="trip-summary" class="route-summary"></p>
+    <div id="global-warnings" class="result-warning" role="note" hidden></div>
+    <p id="form-error" class="error-message" role="alert" hidden></p>
+    <p id="status-message" class="status-message" role="status" aria-live="polite" hidden></p>
+    <figure class="route-map-box">
+      <div id="route-map" class="route-map" role="img" aria-label="API가 반환한 실제 경로 좌표도"></div>
+      <figcaption class="map-caption">실제 경로 좌표도 · 배경지도 미포함</figcaption>
+    </figure>
+    <div id="route-detail"></div>
+    <section id="empty-state" class="empty-state" hidden>
+      <h2>선택한 경로가 없어요</h2>
+      <p>경로 비교 화면에서 확인할 경로를 선택해주세요.</p>
+      <a href="/result.html" class="btn-primary">경로 비교로 돌아가기</a>
+    </section>
+    <p id="selected-status" class="selection-status" role="status" aria-live="polite" hidden></p>
+    <button id="choose-route-button" type="button" class="btn-primary">이 경로 선택하기</button>
+    <p class="data-note">선택 완료는 이 화면에서만 안내해요. 서버에 선택 이력을 저장하지 않아요.</p>
+    <a href="/check.html" class="route-link">데이터 확인 안내 보기 <span aria-hidden="true">→</span></a>
+  </main>
+  <noscript><p class="error-message">이 화면을 사용하려면 브라우저의 JavaScript를 켜주세요.</p></noscript>
+</body>
+</html>
