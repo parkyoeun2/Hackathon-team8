@@ -348,7 +348,6 @@
     if (presentation.slope) {
       const slope = node("div", "explanation-slope");
       slope.append(node("p", "slope-preference", presentation.slope.summary));
-      if (presentation.slope.caution) slope.append(node("p", "slope-caution", presentation.slope.caution));
       section.append(slope);
     }
     const conditions = node("div", "explanation-conditions");
