@@ -860,6 +860,117 @@
     }
   }
 
+  // 프론트팀의 경사 비교 기능: 현재 edges.json의 확인된 구간만 사용합니다.
+  // API 경로는 [경도, 위도]이며, 경사값은 90m DEM 기반 추정치입니다.
+  const slopePointKey = (point) => point.map((value) => Number(value.toFixed(7)).toString()).join(",");
+  const slopeSegmentKey = (a, b) => [slopePointKey(a), slopePointKey(b)].sort().join("|");
+
+  async function loadKnownSlopeSegments() {
+    const response = await fetch("/static/data/known-slope-segments.json", {
+      cache: "no-store", credentials: "same-origin",
+    });
+    if (!response.ok) throw new Error("경사 데이터 파일을 불러오지 못했습니다.");
+    const data = await response.json();
+    if (!isObject(data)) throw new Error("경사 데이터 형식이 올바르지 않습니다.");
+    return data;
+  }
+
+  function confirmedSlope(route, segments) {
+    let maximum = null;
+    let matched = 0;
+    for (let i = 1; i < route.coordinates.length; i += 1) {
+      const key = slopeSegmentKey(route.coordinates[i - 1], route.coordinates[i]);
+      const value = Object.prototype.hasOwnProperty.call(segments, key) ? segments[key] : null;
+      if (!isNumber(value) || value < 0) continue;
+      matched += 1;
+      maximum = maximum === null ? value : Math.max(maximum, value);
+    }
+    return { maximum, matched };
+  }
+
+  function createSlopeFigure(card) {
+    const reason = card.querySelector(".route-reason");
+    if (!reason) return null;
+    const figure = node("figure", "slope-illust");
+    figure.id = "slope-comparison";
+    figure.hidden = true;
+    figure.append(node("figcaption", "slope-illust-title", "확인된 구간의 최대 경사 추정값 비교"));
+    const graphic = node("div", "slope-illust-graphic");
+    const walker = document.createElement("img");
+    walker.className = "slope-illust-walker";
+    walker.src = "/static/img/illust-walker.svg";
+    walker.alt = "";
+    const area = node("div", "slope-chart-area");
+    const chart = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    chart.id = "slope-comparison-chart";
+    // 좌측의 불필요한 SVG 여백을 잘라 졸라맨이 삼각형 시작점 바로 옆에 오도록 합니다.
+    chart.setAttribute("viewBox", "52 0 201 130");
+    chart.setAttribute("role", "img");
+    area.append(chart);
+    const legend = node("div", "slope-legend");
+    legend.append(node("span", "", "선택한 길"), node("span", "slope-legend-shortest", "최단거리"));
+    area.append(legend);
+    graphic.append(walker, area);
+    const note = node("p", "slope-illust-note", "");
+    note.id = "slope-comparison-note";
+    figure.append(graphic, note);
+    reason.after(figure);
+    return figure;
+  }
+
+  async function renderSlopeComparison(trip, selectedRoute, figure) {
+    if (!figure) return;
+    figure.hidden = true;
+    // UI 문구가 아닌 사용자가 실제로 설정한 선호를 판단합니다.
+    if (trip.profile.gentleSlope !== true) return;
+    const shortest = trip.response.routes.reduce((min, route) =>
+      !min || route.distanceM < min.distanceM ? route : min, null);
+    if (!shortest) return;
+    // 선택한 길이 최단 경로 자체라면 중복된 삼각형 비교를 그리지 않습니다.
+    if (shortest.id === selectedRoute.id) return;
+    if (shortest.coordinates.length === selectedRoute.coordinates.length
+      && shortest.coordinates.every((point, index) =>
+        point[0] === selectedRoute.coordinates[index][0]
+        && point[1] === selectedRoute.coordinates[index][1])) return;
+
+    let segments;
+    try { segments = await loadKnownSlopeSegments(); }
+    catch (_) { return; } // 경사 데이터만 숨기고 지도와 쉼터·GPS는 유지합니다.
+    const selected = confirmedSlope(selectedRoute, segments);
+    const reference = confirmedSlope(shortest, segments);
+    if (selected.maximum === null || reference.maximum === null) return;
+
+    const chart = figure.querySelector("#slope-comparison-chart");
+    const note = figure.querySelector("#slope-comparison-note");
+    chart.replaceChildren();
+    const svgNS = "http://www.w3.org/2000/svg";
+    const add = (tag, attrs) => {
+      const element = document.createElementNS(svgNS, tag);
+      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, String(value)));
+      chart.append(element);
+    };
+    const startX = 64, endX = 241, baseY = 116;
+    const scale = Math.max(1, selected.maximum, reference.maximum);
+    const height = (pct) => pct / scale * 88;
+    add("line", { x1: startX, y1: baseY, x2: endX, y2: baseY, stroke: "#7b8d80", "stroke-width": 1.5 });
+    const draw = (value, dashed) => {
+      const y = baseY - height(value);
+      const attrs = {
+        points: `${startX},${baseY} ${endX},${baseY} ${endX},${y} ${startX},${baseY}`,
+        fill: dashed ? "none" : "#b4cbb9",
+        "fill-opacity": dashed ? 0 : 0.85,
+        stroke: "#4f6958", "stroke-width": 3, "stroke-linejoin": "round",
+      };
+      if (dashed) attrs["stroke-dasharray"] = "7 5";
+      add("polyline", attrs);
+    };
+    draw(selected.maximum, false);
+    draw(reference.maximum, true);
+    chart.setAttribute("aria-label", `선택 경로 확인 구간 최대 경사 ${selected.maximum}%, 최단거리 경로 확인 구간 최대 경사 ${reference.maximum}%`);
+    note.textContent = `선택한 길 ${numbers.format(selected.maximum)}% · 최단거리 ${numbers.format(reference.maximum)}% · 90m DEM 기반 추정값입니다. 미확인 구간은 비교에서 제외했어요.`;
+    figure.hidden = false;
+  }
+
   function initDetail(page) {
     const trip = readTrip();
     if (!trip) return showEmpty("표시할 경로가 없습니다. 홈에서 경로를 다시 요청해 주세요.");
@@ -881,8 +992,11 @@
       card.append(checkLink);
     }
     byId("route-detail").replaceChildren(card);
-    if (page === "route") renderRouteMap(byId("route-map"), trip, route);
-    else renderCoordinateMap(byId("route-map"), route.coordinates);
+    if (page === "route") {
+      const slopeFigure = createSlopeFigure(card);
+      renderRouteMap(byId("route-map"), trip, route);
+      void renderSlopeComparison(trip, route, slopeFigure);
+    } else renderCoordinateMap(byId("route-map"), route.coordinates);
     const choose = byId("choose-route-button");
     if (choose) choose.addEventListener("click", () => {
       try {

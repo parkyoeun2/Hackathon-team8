@@ -1850,3 +1850,96 @@ body > noscript {
   text-shadow: 0 1px 2px #ffffff;
   transform-origin: 10px 30px;
 }
+
+/* P11: 확인된 구간 경사 추정값 비교 (기존 지도·GPS 스타일과 별도) */
+.slope-illust {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--color-primary-subtle);
+}
+.slope-illust[hidden] { display: none; }
+.slope-illust-title {
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.slope-illust-graphic {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+.slope-illust-walker {
+  width: 24px;
+  height: auto;
+  flex: 0 0 24px;
+  margin-bottom: 10px;
+}
+.slope-chart-area { flex: 0 1 201px; min-width: 0; }
+.slope-chart-area svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 130px;
+  overflow: visible;
+}
+.slope-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 8px;
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+}
+.slope-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-top: 3px solid #4f6958;
+}
+.slope-legend .slope-legend-shortest::before {
+  border-top-style: dashed;
+}
+.slope-illust-note {
+  margin: 8px 0 0;
+  color: var(--color-text-sub);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.route-detail .route-card .route-reason + .slope-illust {
+  width: 100%;
+  margin: 12px 0 16px;
+  box-sizing: border-box;
+}
+@media (max-width: 380px) {
+  .slope-chart-area { flex: 1 1 auto; }
+}
+
+/* 추천 강조는 첫 번째 맞춤 추천 카드의 고정 속성입니다.
+   다른 경로를 선택하더라도 녹색 추천 카드가 이동하면 안 됩니다. */
+body[data-page="result"] .route-list > .route-card.is-recommended,
+body[data-page="result"] .route-list > .route-card.is-recommended:hover {
+  background-color: #edf3ef;
+  border-color: var(--color-primary);
+  box-shadow: 0 8px 24px rgba(70, 105, 86, 0.12);
+}
+body[data-page="result"] .route-list > .route-card.is-recommended .route-label {
+  color: var(--color-primary);
+}
+body[data-page="result"] .route-list > .route-card.is-selected:not(.is-recommended) {
+  background-color: var(--color-bg-card);
+  border-color: #88958c;
+  box-shadow: 0 0 0 2px rgba(60, 78, 71, 0.12);
+}
+body[data-page="result"] .route-list > .route-card.is-selected:not(.is-recommended) .route-label {
+  color: #3b4740;
+}
+body[data-page="result"] .route-list > .route-card:not(.is-recommended) .route-type-badge {
+  color: #526159;
+  background: #f5f6f5;
+  border-color: #d8deda;
+}
