@@ -487,7 +487,187 @@
     });
     container.replaceChildren(svg);
   }
+  // 휴식 공간 후보는 경로 추천과 별도로 조회합니다.
+  // 쉼터 표시 실패가 기존 경로 지도에 영향을 주지 않도록 처리합니다.
+  async function showRestSpotsOnMap(leaflet, map) {
+    message("rest-spots-status", "휴식 공간 후보를 불러오는 중이에요.");
 
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+    try {
+      // P9-A에서 만든 FastAPI에 쉼터 데이터 요청
+      const response = await fetch("/api/rest-spots", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error("쉼터 API 요청 실패");
+      }
+
+      const data = await response.json();
+
+      if (!isObject(data) || !Array.isArray(data.restSpots)) {
+        throw new Error("쉼터 응답 형식 오류");
+      }
+
+      // Leaflet 쉼터 아이콘
+      const icon = leaflet.divIcon({
+        className: "rest-spot-marker",
+        html: '<span aria-hidden="true">🪑</span>',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+        popupAnchor: [0, -20],
+      });
+
+      // 기존 경로선과 별도로 관리할 마커 그룹
+      const markers = leaflet.layerGroup();
+
+      let displayed = 0;
+
+      data.restSpots.forEach((spot) => {
+        // 유효하지 않은 좌표는 지도에 표시하지 않음
+        if (
+          !isObject(spot) ||
+          typeof spot.name !== "string" ||
+          !spot.name.trim() ||
+          !isNumber(spot.lat) ||
+          Math.abs(spot.lat) > 90 ||
+          !isNumber(spot.lng) ||
+          Math.abs(spot.lng) > 180
+        ) {
+          return;
+        }
+
+        // 팝업 생성
+        const popup = node("div", "rest-spot-popup");
+
+        popup.append(
+          node("strong", "rest-spot-popup-title", spot.name)
+        );
+
+        // 시설 종류
+        const types = {
+          playground: "어린이공원",
+          campus_bench_area: "교내 벤치 구역",
+          campus_seating_area: "교내 휴식 공간",
+          park_seating_area: "공원 휴식 공간",
+        };
+
+        popup.append(
+          node(
+            "p",
+            "rest-spot-popup-type",
+            types[spot.type] || "휴식 공간 후보"
+          )
+        );
+
+        // 확인 방법
+        const method =
+          spot.verificationMethod === "field_observation"
+            ? "현장에서 의자·벤치 존재 확인"
+            : spot.verificationMethod === "map_visual"
+              ? "거리뷰에서 확인한 정보 · 현재 상태 미확인"
+              : "확인 방법 미확인";
+
+        popup.append(
+          node("p", "rest-spot-popup-method", method)
+        );
+
+        // 벤치 개수
+        if (
+          Number.isInteger(spot.benchCount) &&
+          spot.benchCount >= 0
+        ) {
+          popup.append(
+            node(
+              "p",
+              "rest-spot-popup-count",
+              `확인 당시 벤치 수: ${spot.benchCount}개`
+            )
+          );
+        } else {
+          popup.append(
+            node(
+              "p",
+              "rest-spot-popup-count",
+              "벤치 수: 정보 미확인"
+            )
+          );
+        }
+
+        // 대표 좌표에 대한 안내
+        popup.append(
+          node(
+            "p",
+            "rest-spot-popup-caution",
+            "표시된 위치는 대표 좌표이며 실제 좌석 위치와 다를 수 있어요."
+          )
+        );
+
+        // 접근성 미검증 안내
+        if (spot.accessibilityVerified !== true) {
+          popup.append(
+            node(
+              "p",
+              "rest-spot-popup-caution",
+              "외부인 이용 가능 여부와 실제 보행 접근성은 미확인이에요."
+            )
+          );
+        }
+
+        // Leaflet 마커 생성
+        leaflet.marker([spot.lat, spot.lng], {
+          icon: icon,
+          title: spot.name,
+          alt: `${spot.name} 휴식 공간 후보`,
+          keyboard: true,
+        })
+          .bindPopup(popup, { maxWidth: 270 })
+          .addTo(markers);
+
+        displayed += 1;
+      });
+
+      // 기존 지도에 쉼터 마커 그룹 추가
+      markers.addTo(map);
+
+      // 사용자 안내
+      if (!data.restSpots.length) {
+        message(
+          "rest-spots-status",
+          "현재 등록된 휴식 공간 후보 정보가 없어요."
+        );
+      } else if (!displayed) {
+        message(
+          "rest-spots-status",
+          "쉼터 후보의 위치 정보를 확인하지 못했어요. 기존 경로 지도는 이용할 수 있어요."
+        );
+      } else {
+        const skipped = data.restSpots.length - displayed;
+
+        message(
+          "rest-spots-status",
+          `시연 지역 휴식 공간 후보 ${displayed}곳을 표시했어요. 지도에서 🪑 아이콘을 눌러보세요.` +
+          (skipped
+            ? ` 위치가 확인되지 않은 후보 ${skipped}곳은 제외했어요.`
+            : "")
+        );
+      }
+
+    } catch (_) {
+      message(
+        "rest-spots-status",
+        "휴식 공간 후보 정보를 불러올 수 없어요. 기존 경로 지도는 계속 이용할 수 있어요."
+      );
+
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
   // ZIP의 지도 코드에서 좌표 변환·경로선·끝점 마커만 선별했습니다.
   // result/check는 SVG를 사용하며, Leaflet은 route에서만 초기화합니다.
   function renderRouteMap(container, trip, selectedRoute) {
@@ -533,6 +713,8 @@
       map.fitBounds(leaflet.latLngBounds(points), { padding: [32, 32], maxZoom: 18 });
       selectedLine.bringToFront();
       window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+      // 기존 경로 지도를 유지하면서 쉼터 후보를 별도로 표시
+      void showRestSpotsOnMap(leaflet, map);
     } catch (_) {
       if (map) map.remove();
       container.replaceChildren();

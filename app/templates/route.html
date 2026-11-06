@@ -32,6 +32,21 @@
         aria-label="선택한 실제 경로 지도" aria-describedby="map-endpoint-note"></div>
       <figcaption class="map-caption">실제 경로 좌표 · OpenStreetMap 배경지도 · 굵은 선이 선택한 경로예요.</figcaption>
     </figure>
+      <section class="rest-spots-guide" aria-label="시연 지역 휴식 공간 후보">
+        <h2 class="rest-spots-guide-title">🪑 시연 지역 휴식 공간 후보</h2>
+
+        <p id="rest-spots-status"
+          class="rest-spots-status"
+          role="status"
+          aria-live="polite">
+          지도에서 벤치 아이콘을 누르면 시설 정보를 볼 수 있어요.
+        </p>
+
+        <p class="rest-spots-guide-note">
+          표시된 위치는 대표 좌표이며, 시설 이용 가능 여부와 실제 보행 접근성은 아직 확인되지 않았어요.
+        </p>
+      </section>
+
     <p id="map-endpoint-note" class="data-note">출발·도착 마커는 경로의 시작·끝 보행 노드예요. 입력한 장소 좌표와 다를 수 있어요.</p>
     <div id="route-detail"></div>
     <section id="empty-state" class="empty-state" hidden>
